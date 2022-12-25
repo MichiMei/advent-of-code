@@ -51,6 +51,38 @@ fn day_03_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 03 part 2", |b| b.iter(|| day_03::part_2(&input)));
 }
 
+fn day_04_part_1_benchmark(c: &mut Criterion) {
+    let input_name = "input/year_2015/input_day_04.txt";
+    let input = read_lines_untrimmed_from_file(input_name)
+        .expect("Reading file failed");
+
+    c.bench_function("Bench day 04 part 1", |b| b.iter(|| day_04::part_1(&input)));
+}
+
+fn day_04_part_2_benchmark(c: &mut Criterion) {
+    let input_name = "input/year_2015/input_day_04.txt";
+    let input = read_lines_untrimmed_from_file(input_name)
+        .expect("Reading file failed");
+
+    c.bench_function("Bench day 04 part 2", |b| b.iter(|| day_04::part_2(&input)));
+}
+
+fn day_05_part_1_benchmark(c: &mut Criterion) {
+    let input_name = "input/year_2015/input_day_05.txt";
+    let input = read_lines_untrimmed_from_file(input_name)
+        .expect("Reading file failed");
+
+    c.bench_function("Bench day 05 part 1", |b| b.iter(|| day_05::part_1(&input)));
+}
+
+fn day_05_part_2_benchmark(c: &mut Criterion) {
+    let input_name = "input/year_2015/input_day_05.txt";
+    let input = read_lines_untrimmed_from_file(input_name)
+        .expect("Reading file failed");
+
+    c.bench_function("Bench day 05 part 2", |b| b.iter(|| day_05::part_2(&input)));
+}
+
 /*
 fn day_XX_part_1_benchmark(c: &mut Criterion) { // TODO
     let input_name = "input/year_2015/input_day_XX.txt";    // TODO
@@ -75,7 +107,9 @@ criterion_group!(benches,
     day_02_part_1_benchmark,
     day_02_part_2_benchmark,
     day_03_part_1_benchmark,
-    day_03_part_2_benchmark
+    day_03_part_2_benchmark,
+    day_04_part_1_benchmark,
+    day_04_part_2_benchmark
 
     /*
     day_XX_part_1_benchmark,    // TODO
