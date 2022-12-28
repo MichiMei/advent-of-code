@@ -95,10 +95,6 @@ mod test {
     }
 
     #[test]
-    fn check_examples_part_2() {
-    }
-
-    #[test]
     fn check_input_part_2() -> std::io::Result<()> {
         let input_name = "input/year_2015/input_day_04.txt";
         let input = read_lines_untrimmed_from_file(input_name)?;
