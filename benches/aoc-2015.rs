@@ -275,6 +275,22 @@ fn day_17_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 17 part 2", |b| b.iter(|| day_17::part_2(&input)));
 }
 
+fn day_18_part_1_benchmark(c: &mut Criterion) {
+    let input_name = "input/year_2015/input_day_18.txt";
+    let input = read_lines_untrimmed_from_file(input_name)
+        .expect("Reading file failed");
+
+    c.bench_function("Bench day 18 part 1", |b| b.iter(|| day_18::part_1(&input)));
+}
+
+fn day_18_part_2_benchmark(c: &mut Criterion) {
+    let input_name = "input/year_2015/input_day_18.txt";
+    let input = read_lines_untrimmed_from_file(input_name)
+        .expect("Reading file failed");
+
+    c.bench_function("Bench day 18 part 2", |b| b.iter(|| day_18::part_2(&input)));
+}
+
 /*
 fn day_XX_part_1_benchmark(c: &mut Criterion) { // TODO
     let input_name = "input/year_2015/input_day_XX.txt";    // TODO
