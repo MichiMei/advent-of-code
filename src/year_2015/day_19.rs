@@ -1,5 +1,7 @@
-use std::collections::HashSet;
-use std::mem::swap;
+use std::collections::{HashMap, HashSet};
+use std::iter::Peekable;
+use std::ops::{Add, Sub};
+use std::str::Chars;
 
 pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     if input.len() < 3 || !input[input.len()-2].is_empty() {
@@ -17,30 +19,15 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
 }
 
 pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
-    /*if input.len() < 3 || !input[input.len()-2].is_empty() {
-        return Err(ERR_INPUT_MALFORMED)
-    }
-    let replacements = parse_replacements(&input[0..input.len()-2])?;
-    let goal = &input[input.len()-1];
-    let mut string_set = HashSet::new();
-    string_set.insert(goal.to_string());
-    let mut tmp = HashSet::new();
-    let mut count = 0;
+    let elems = Elements::from(&input[0..input.len()-2])?;
+    let rules = parse_rules(&input[0..input.len()-2], &elems)?;
+    let goal = Molecule::from_string(&input[input.len()-1], &elems)?;
+    let start = Molecule::from_string("e", &elems)?;
 
-    while !string_set.contains("e") {
-        for str in string_set.iter() {
-            for repl in replacements.iter() {
-                tmp.extend(replace_reverse(&str, &repl));
-            }
-        }
-        swap(&mut string_set, &mut tmp);
-        tmp.clear();
-        count += 1;
-        println!("{} -> {}", count, string_set.len());
-    }
+    let rules_vec: Vec<Molecule> = rules.into_iter().collect();
+    let res = build_molecule_rule_wise(&start, &rules_vec, &goal, &elems, 0, goal.count(), "").ok_or(ERR_INPUT_MALFORMED)?;
 
-    Ok(count.to_string())*/
-    unimplemented!()
+    Ok(res.to_string())
 }
 
 fn parse_replacements(input: &[String]) -> Result<Vec<Replacement>, &str> {
@@ -66,21 +53,6 @@ fn replace(start_str: &str, repl: &Replacement) -> HashSet<String> {
     res
 }
 
-fn replace_reverse(start_str: &str, repl: &Replacement) -> HashSet<String> {
-    let mut res = HashSet::new();
-    let mut last = 0;
-    while let Some(location) = start_str[last..].find(&repl.replacement) {
-        let location = last+location;
-        let s0 = start_str[0..location].to_string();
-        let s1 = &repl.pattern[..];
-        let s2 = &start_str[location+repl.replacement.len()..];
-        let new = String::from(s0+s1+s2);
-        res.insert(new);
-        last = location+1;
-    }
-    res
-}
-
 struct Replacement {
     pattern: String,
     replacement: String,
@@ -98,6 +70,220 @@ impl Replacement {
             return Err(ERR_INPUT_MALFORMED)
         }
         Ok(Self{pattern, replacement})
+    }
+}
+
+fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Molecule, elems: &Elements, r_count: usize, max: usize, dbg: &str) -> Option<usize> {
+    if rules.len() == 0 {
+        return if molecule == goal {
+            let m_count = goal.count_intermediates(elems) - molecule.count_intermediates(elems);
+            Some(m_count + r_count)
+        } else {
+            None
+        }
+    }
+    let rule = &rules[0];
+
+    let mut min = build_molecule_rule_wise(&molecule, &rules[1..], goal, elems, r_count, max, &format!("{} 0", dbg));
+    let mut new_molecule = molecule.clone();
+    for c in 1..=max {
+        new_molecule = &new_molecule + rule;
+        if !new_molecule.is_valid(goal) {
+            break;
+        }
+        let tmp = build_molecule_rule_wise(&new_molecule, &rules[1..], goal, elems, r_count+c, max, &format!("{} {}", dbg, c));
+        if min.is_none() || (tmp.is_some() && min.unwrap() < tmp.unwrap()) {
+            min = tmp;
+        }
+    }
+    min
+}
+
+fn parse_rules(input: &[String], elems: &Elements) -> Result<HashSet<Molecule>, &'static str> {
+    let mut rules = HashSet::new();
+    for line in input.iter() {
+        let tmp = Molecule::from_rule(line, elems)?;
+        /*if tmp.count_terminals(elems) == 0 {
+            continue
+        }*/
+        rules.insert(tmp);
+    }
+    Ok(rules)
+}
+
+#[derive(Debug)]
+struct Elements {
+    elements: Vec<String>,
+    terminal: Vec<bool>,
+    index: HashMap<String, usize>,
+    template_intermediate: Option<usize>,
+}
+
+impl Elements {
+    fn new() -> Self {
+        Self {
+            elements: vec![],
+            terminal: vec![],
+            index: HashMap::new(),
+            template_intermediate: None,
+        }
+    }
+
+    fn from(input: &[String]) -> Result<Self, &'static str> {
+        let mut elems = Elements::new();
+
+        for line in input.iter() {
+            let words: Vec<&str> = line.split(" => ").collect();
+            if words.len() != 2 {
+                return Err(ERR_INPUT_MALFORMED)
+            }
+            let mut chars = words[0].chars().peekable();
+            let tmp = parse_elem(&mut chars).ok_or(ERR_INPUT_MALFORMED)?;
+            if parse_elem(&mut chars).is_some() {
+                return Err(ERR_INPUT_MALFORMED)
+            }
+            let index = elems.add(tmp);
+            elems.set_intermediate(index);
+
+            let mut chars = words[1].chars().peekable();
+            while let Some(tmp) = parse_elem(&mut chars) {
+                elems.add(tmp);
+            }
+        }
+        Ok(elems)
+    }
+
+    fn add(&mut self, name: String) -> usize {
+        if let Some(index) = self.index.get(&name) {
+            *index
+        } else {
+            let index = self.elements.len();
+            self.elements.push(name.clone());
+            self.terminal.push(true);
+            self.index.insert(name, index);
+            index
+        }
+    }
+
+    fn set_intermediate(&mut self, index: usize) -> bool {
+        if index >= self.elements.len() {
+            false
+        } else {
+            self.terminal[index] = false;
+            if self.template_intermediate.is_none() {
+                self.template_intermediate = Some(index);
+            }
+            true
+        }
+    }
+
+    fn get_index(&self, name: &str) -> Option<usize> {
+        let tmp = self.index.get(name).map(|x| *x);
+        if tmp.is_some() && !self.terminal[tmp.unwrap()] {
+            assert!(self.template_intermediate.is_some());
+            return self.template_intermediate
+        }
+        tmp
+    }
+
+    fn is_terminal(&self, index: usize) -> bool {
+        self.terminal[index]
+    }
+}
+
+#[derive(Eq, PartialEq, Hash, Debug, Clone)]
+struct Molecule {
+    counts: Vec<i32>,
+}
+
+impl Molecule {
+    fn from_rule(str: &str, elems: &Elements) -> Result<Self, &'static str> {
+        let words: Vec<&str> = str.split(" => ").collect();
+        if words.len() != 2 {
+            return Err(ERR_INPUT_MALFORMED)
+        }
+        let negative = Self::from_string(words[0], elems)?;
+        let positive = Self::from_string(words[1], elems)?;
+        Ok(positive - negative)
+    }
+
+    fn from_string(str: &str, elems: &Elements) -> Result<Self, &'static str> {
+        let mut counts = vec![0; elems.elements.len()];
+        let mut chars = str.chars().peekable();
+        while let Some(e) = Self::parse_elem(&mut chars, elems) {
+            counts[e?] += 1;
+        }
+        Ok(Self{counts})
+    }
+
+    fn parse_elem(chars: &mut Peekable<Chars>, elems: &Elements) -> Option<Result<usize, &'static str>> {
+        let res = parse_elem(chars)?;
+        Some(elems.get_index(&res).ok_or(ERR_INPUT_MALFORMED))
+    }
+
+    fn is_valid(&self, goal: &Self) -> bool {
+        for (s, g) in self.counts.iter().zip(goal.counts.iter()) {
+            if s > g {
+                return false
+            }
+        }
+        true
+    }
+
+    fn count_intermediates(&self, elems: &Elements) -> usize {
+        let mut count = 0;
+        for (index, val) in self.counts.iter().enumerate() {
+            if !elems.is_terminal(index) {
+                count += val;
+            }
+        }
+        assert!(count >= 0);
+        count as usize
+    }
+
+    fn count(&self) -> usize {
+        let mut count = 0;
+        for val in self.counts.iter() {
+            count += val;
+        }
+        assert!(count >= 0);
+        count as usize
+    }
+}
+
+fn parse_elem<I>(chars: &mut Peekable<I>) -> Option<String>
+    where I: Iterator<Item = char> {
+    if chars.peek().is_none() {
+        return None
+    }
+    let mut res = format!("{}", chars.next().unwrap());
+    if chars.peek().is_some() && chars.peek().unwrap().is_lowercase() {
+        res = format!("{}{}", res, chars.next().unwrap());
+    }
+    Some(res)
+}
+
+impl Add for &Molecule {
+    type Output = Molecule;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let counts = self.counts.iter()
+            .zip(rhs.counts.iter())
+            .map(|(x, y)| *x + *y)
+            .collect();
+        Molecule{counts}
+    }
+}
+
+impl Sub for Molecule {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let counts = self.counts.iter()
+            .zip(rhs.counts.iter())
+            .map(|(x, y)| *x - *y)
+            .collect();
+        Self{counts}
     }
 }
 
@@ -139,36 +325,11 @@ mod test {
     }
 
     #[test]
-    fn check_examples_part_2() {
-        let v0 = vec![
-            "e => H".to_string(),
-            "e => O".to_string(),
-            "H => HO".to_string(),
-            "H => OH".to_string(),
-            "O => HH".to_string(),
-            "".to_string(),
-            "HOH".to_string()
-        ];
-        assert_eq!(part_2(&v0), Ok("3".to_string()));
-
-        let v1 = vec![
-            "e => H".to_string(),
-            "e => O".to_string(),
-            "H => HO".to_string(),
-            "H => OH".to_string(),
-            "O => HH".to_string(),
-            "".to_string(),
-            "HOHOHO".to_string()
-        ];
-        assert_eq!(part_2(&v1), Ok("6".to_string()));
-    }
-
-    #[test]
     fn check_input_part_2() -> std::io::Result<()> {
         let input_name = "input/year_2015/input_day_19.txt";
         let input = read_lines_untrimmed_from_file(input_name)?;
 
-        assert_eq!(part_2(&input), Ok("expected".to_string())); // TODO
+        assert_eq!(part_2(&input), Ok("212".to_string()));
         Ok(())
     }
 }
