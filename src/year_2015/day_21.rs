@@ -1,5 +1,4 @@
 use std::cmp::{max, min};
-use std::fmt::{Display, Formatter};
 use crate::year_2015::lib_2015::{Character, Item};
 
 pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
@@ -109,28 +108,28 @@ fn fight(mut first: Character, mut second: Character) -> bool {
 }
 
 const WEAPONS: [Item; 5] = [
-    Item{name: "Dagger", cost: 8, damage: 4, armor: 0},
-    Item{name: "Shortsword", cost: 10, damage: 5, armor: 0},
-    Item{name: "Warhammer", cost: 25, damage: 6, armor: 0},
-    Item{name: "Longsword", cost: 40, damage: 7, armor: 0},
-    Item{name: "Greataxe", cost: 74, damage: 8, armor: 0},
+    Item{cost: 8, damage: 4, armor: 0},
+    Item{cost: 10, damage: 5, armor: 0},
+    Item{cost: 25, damage: 6, armor: 0},
+    Item{cost: 40, damage: 7, armor: 0},
+    Item{cost: 74, damage: 8, armor: 0},
 ];
 
 const ARMORS: [Item; 5] = [
-    Item{name: "Leather", cost: 13, damage: 0, armor: 1},
-    Item{name: "Chainmail", cost: 31, damage: 0, armor: 2},
-    Item{name: "Splintmail", cost: 53, damage: 0, armor: 3},
-    Item{name: "Bandedmail", cost: 75, damage: 0, armor: 4},
-    Item{name: "Platemail", cost: 102, damage: 0, armor: 5},
+    Item{cost: 13, damage: 0, armor: 1},
+    Item{cost: 31, damage: 0, armor: 2},
+    Item{cost: 53, damage: 0, armor: 3},
+    Item{cost: 75, damage: 0, armor: 4},
+    Item{cost: 102, damage: 0, armor: 5},
 ];
 
 const RINGS: [Item; 6] = [
-    Item{name: "Damage +1", cost: 25, damage: 1, armor: 0},
-    Item{name: "Damage +2", cost: 50, damage: 2, armor: 0},
-    Item{name: "Damage +3", cost: 100, damage: 3, armor: 0},
-    Item{name: "Defense +1", cost: 20, damage: 0, armor: 1},
-    Item{name: "Defense +2", cost: 40, damage: 0, armor: 2},
-    Item{name: "Defense +3", cost: 80, damage: 0, armor: 3},
+    Item{cost: 25, damage: 1, armor: 0},
+    Item{cost: 50, damage: 2, armor: 0},
+    Item{cost: 100, damage: 3, armor: 0},
+    Item{cost: 20, damage: 0, armor: 1},
+    Item{cost: 40, damage: 0, armor: 2},
+    Item{cost: 80, damage: 0, armor: 3},
 ];
 
 const ERR_INPUT_MALFORMED: &str = "Input string is malformed";

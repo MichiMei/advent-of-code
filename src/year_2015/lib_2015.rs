@@ -55,8 +55,7 @@ impl Display for Character {
     }
 }
 
-pub struct Item<'a> {
-    pub(crate) name: &'a str,
+pub struct Item {
     pub(crate) cost: usize,
     pub(crate) damage: usize,
     pub(crate) armor: usize,

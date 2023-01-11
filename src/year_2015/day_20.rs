@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_INPUT_MALFORMED)
@@ -22,21 +20,6 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
     let index = find_first_bigger_with_factor(&vec, target, 11).ok_or(ERR_INPUT_MALFORMED)?;
 
     Ok(index.to_string())
-}
-
-fn get_divisors(i: usize) -> HashSet<usize> {
-    let mut divisors = HashSet::new();
-    let mut current = 1;
-    let mut opposite = i;
-    while current <= opposite {
-        if i % current == 0 {
-            divisors.insert(current);
-            opposite = i/current;
-            divisors.insert(opposite);
-        }
-        current += 1;
-    }
-    divisors
 }
 
 fn calculate_array(max_house: usize) -> Vec<usize> {
