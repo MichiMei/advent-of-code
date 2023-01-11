@@ -1,5 +1,6 @@
 use std::cmp::{max, min};
 use std::fmt::{Display, Formatter};
+use crate::year_2015::lib_2015::{Character, Item};
 
 pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
@@ -107,57 +108,6 @@ fn fight(mut first: Character, mut second: Character) -> bool {
     }
 }
 
-#[derive(Copy, Clone)]
-struct Character {
-    hit_points: usize,
-    damage: usize,
-    armor: usize,
-}
-
-impl Character {
-    fn new(hit_points: usize, damage: usize, armor: usize) -> Self {
-        Self{hit_points, damage, armor}
-    }
-
-    fn from_input(input: &Vec<String>) -> Option<Self> {
-        if input.len() != 3 {
-            return None
-        }
-        let hit_points = Self::parse_val(&input[0])?;
-        let damage = Self::parse_val(&input[1])?;
-        let armor = Self::parse_val(&input[2])?;
-        Some(Self::new(hit_points, damage, armor))
-    }
-
-    fn add_item(&mut self, item: &Item) {
-        self.damage += item.damage;
-        self.armor += item.armor;
-    }
-
-    fn attacked_by(&mut self, attacker: &Character) -> bool {
-        let real_damage = attacker.damage.checked_sub(self.armor).unwrap_or(0);
-        self.hit_points = self.hit_points.checked_sub(real_damage).unwrap_or(0);
-        if self.hit_points == 0 {
-            return false
-        }
-        true
-    }
-
-    fn parse_val(line: &str) -> Option<usize> {
-        let words: Vec<&str> = line.split(": ").collect();
-        if words.len() != 2 {
-            return None
-        }
-        words[1].parse().ok()
-    }
-}
-
-impl Display for Character {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "hp: {}\tdmg: {}\tarmor: {}", self.hit_points, self.damage, self.armor)
-    }
-}
-
 const WEAPONS: [Item; 5] = [
     Item{name: "Dagger", cost: 8, damage: 4, armor: 0},
     Item{name: "Shortsword", cost: 10, damage: 5, armor: 0},
@@ -182,13 +132,6 @@ const RINGS: [Item; 6] = [
     Item{name: "Defense +2", cost: 40, damage: 0, armor: 2},
     Item{name: "Defense +3", cost: 80, damage: 0, armor: 3},
 ];
-
-struct Item<'a> {
-    name: &'a str,
-    cost: usize,
-    damage: usize,
-    armor: usize,
-}
 
 const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 const ERR_NO_POSSIBILITY_FOUND: &str = "No possible solution was found";
