@@ -1,72 +1,148 @@
-use std::collections::HashSet;
+use std::cmp::min;
 
 pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
-    let mut weights = parse_input(input)?;
+    let weights = parse_input(input)?;
 
-    unimplemented!()
+    let res = check_distributions(&weights, 3).ok_or(ERR_NO_SOLUTION)?;
+
+    Ok(res.to_string())
 }
 
 pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
-    unimplemented!()
+    let weights = parse_input(input)?;
+
+    let res = check_distributions(&weights, 4).ok_or(ERR_NO_SOLUTION)?;
+
+    Ok(res.to_string())
 }
 
-fn calc_optimal_distribution(weights: &Vec<u128>) -> Option<u128> {
-    let mut sorted = weights.clone();
-    sorted.sort_unstable();
-    sorted.reverse();
-    let min = min_set_size(weights);
-    let max = weights.iter().count()/3;
-    for size in min..=max {
-        if let Some(res) = calc_optimal_distribution_for_size(weights, size) {
-            return Some(res)
+fn check_distributions(weights: &Vec<u128>, bucket_count: usize) -> Option<u128> {
+    let sum: u128 = weights.iter().sum();
+    assert_eq!(sum%(bucket_count as u128), 0);
+    let goal = sum/(bucket_count as u128);
+    let count = weights.len();
+    let distribution = Distribution::new(weights.clone());
+    for size in 1..=count/bucket_count {
+        if !distribution.size_is_possible(size, goal) {
+            continue
+        }
+        if let Some(quantum) =
+            check_distributions_for_size_rec(size, goal, distribution.clone(), 0,
+                                             bucket_count) {
+            return Some(quantum)
         }
     }
     None
 }
 
-fn calc_optimal_distribution_for_size(weights: &Vec<u128>, size: usize) -> Option<u128> {
-    let weight_sum = sum_weights(weights);
-    assert_eq!(weight_sum % 3, 0);
-    let goal = weight_sum/3;
+fn check_distributions_for_size_rec(size: usize, goal: u128, mut distribution: Distribution,
+                                    current: usize, bucket_count: usize) -> Option<u128> {
+    if distribution.count == size {
+        let res = distribution.quantum;
+        if distribution.sum == goal {
+            return if distribution.splittable(bucket_count - 1) {
+                Some(res)
+            } else {
+                None
+            }
+        }
+    }
+    if distribution.sum >= goal {
+        return None
+    }
+    if current >= distribution.weights.len() {
+        return None
+    }
+    if !distribution.still_possible(current, size, goal) {
+        return None
+    }
 
-    let mut solutions = find_first_set_rec();
-    solutions.sort_by(|x1, x2| {
-        let y1 = calculate_quantum_entanglement(x1, weights);
-        let y2 = calculate_quantum_entanglement(x2, weights);
-        y1.cmp(&y2)
-    });
-    solutions.sort_by(|x1, x2| {
-        let y1 = calculate_count(x1);
-        let y2 = calculate_count(x2);
-        y1.cmp(&y2)
-    });
+    let mut active = distribution.clone();
+    active.add(current);
+    let res_active =
+        check_distributions_for_size_rec(size, goal, active, current+1,
+                                         bucket_count);
+    let res_inactive =
+        check_distributions_for_size_rec(size, goal, distribution, current+1, bucket_count);
 
-    for solution in solutions {
-        if is_valid(&solution, &weights) {
-            return Some(calculate_quantum_entanglement(&solution, &weights))
+    if res_active.is_none() {
+        return res_inactive
+    }
+    if res_inactive.is_none() {
+        return res_active
+    }
+    Some(min(res_active.unwrap(), res_inactive.unwrap()))
+}
+
+#[derive(Clone)]
+struct Distribution {
+    weights: Vec<u128>,
+    active: Vec<bool>,
+    count: usize,
+    sum: u128,
+    quantum: u128,
+}
+
+impl Distribution {
+    fn new(mut weights: Vec<u128>) -> Self {
+        weights.sort();
+        weights.reverse();
+        let active = vec![false; weights.len()];
+        Self {
+            weights,
+            active,
+            count: 0,
+            sum: 0,
+            quantum: 1,
         }
     }
 
-    None
-}
+    fn add(&mut self, index: usize) {
+        assert!(index < self.weights.len());
+        assert_eq!(self.active[index], false);
 
-fn find_first_set_rec(weights: &Vec<u128>, solution: &Vec<bool>, index: usize, remaining: usize, sum: u128, goal: u128) -> Vec<Vec<bool>> {
-    let mut res = vec![];
-    if remaining == 0 || sum >= goal || index >= solution.len() {
-        if sum == goal {
-            res.push(solution.clone());
-        }
-        return res
+        self.active[index] = true;
+        self.count += 1;
+        self.sum += self.weights[index];
+        self.quantum *= self.weights[index];
     }
 
-    let mut new_solution = solution.clone();
-    new_solution[index] = true;
-    let new_sum = sum + weights[index];
-    res.extend(find_first_set_rec(weights, &new_solution, index+1, remaining-1, new_sum, goal));
-    res.extend(find_first_set_rec(weights, solution, index+1, remaining, sum, goal));
+    fn splittable(&mut self, bucket_count: usize) -> bool {
+        if bucket_count == 1 {
+            return true
+        }
+        let goal = self.sum;
+        self.sum = 0;
+        self.splittable_rec(goal, 0, bucket_count)
+    }
 
-    res
+    fn splittable_rec(&mut self, goal: u128, index: usize, bucket_count: usize) -> bool {
+        if self.sum == goal {
+            return self.splittable(bucket_count-1)
+        }
+        if self.sum > goal || index >= self.weights.len() {
+            return false
+        }
+        if self.active[index] {
+            return self.splittable_rec(goal, index+1, bucket_count);
+        }
+
+        let mut active = self.clone();
+        active.add(index);
+        active.splittable_rec(goal, index+1, bucket_count)
+            || self.splittable_rec(goal, index+1, bucket_count)
+    }
+
+    fn size_is_possible(&self, size: usize, goal: u128) -> bool {
+        self.weights.iter().take(size).sum::<u128>() >= goal
+    }
+
+    fn still_possible(&self, index: usize, size: usize, goal: u128) -> bool {
+        self.sum+self.weights[index]*((size-self.count) as u128) >= goal
+    }
 }
+
+
 
 fn parse_input(input: &Vec<String>) -> Result<Vec<u128>, &str> {
     let mut res = vec![];
@@ -76,215 +152,16 @@ fn parse_input(input: &Vec<String>) -> Result<Vec<u128>, &str> {
     Ok(res)
 }
 
-fn sum_weights(weights: &Vec<u128>) -> u128 {
-    weights.iter().sum()
-}
-
-fn min_set_size(weights: &Vec<u128>) -> usize {
-    let sum = sum_weights(weights);
-    assert_eq!(sum % 3, 0);
-    let goal = sum/3;
-    let mut sum = 0;
-    for (index, elem) in weights.iter().enumerate() {
-        sum += *elem;
-        if sum >= goal {
-            return index+1
-        }
-    }
-    panic!();
-}
-
-fn calculate_count(used: &Vec<bool>) -> usize {
-    used.iter().filter(|y| **y).count()
-}
-
-fn calculate_quantum_entanglement(used: &Vec<bool>, weight: &Vec<u128>) -> u128 {
-    used.iter().zip(weight.iter())
-        .filter(|(b, _)| **b)
-        .map(|(_, w)| *w)
-        .product()
-}
-
-fn is_valid(weights: &Vec<u128>, used: &Vec<bool>) -> bool {
-
-
-
-    unimplemented!()
-}
-
-
-
-
-
-
-
-
-
-fn get_all_possibilities(weights: &Vec<u128>) -> Vec<Vec<bool>> {
-    let sum: u128 = weights.iter().sum();
-    assert_eq!(sum % 3, 0);
-    let goal = sum/3;
-    get_all_possibilities_rec(weights, 0, &vec![false; weights.len()], goal, 0)
-}
-
-fn get_all_possibilities_rec(weights: &Vec<u128>, index: usize, used: &Vec<bool>, goal: u128, sum: u128) -> Vec<Vec<bool>> {
-    if sum == goal {
-        return vec![used.clone()]
-    }
-    if sum > goal || index >= used.len() {
-        return vec![]
-    }
-
-    let mut res = vec![];
-
-    res.extend(get_all_possibilities_rec(weights, index+1, used, goal, sum));
-
-    let mut new_used = used.clone();
-    new_used[index] = true;
-    let new_weight = sum+weights[index];
-    res.extend(
-        get_all_possibilities_rec(weights, index+1, &new_used, goal, new_weight)
-    );
-
-    res
-}
-
-fn combine_possibilities(possibilities: Vec<Vec<bool>>, weights: &Vec<u128>) -> HashSet<Vec<Location>> {
-    let mut res = HashSet::new();
-    for i0 in 0..possibilities.len() {
-        let p0 = &possibilities[i0];
-        for i1 in i0+1..possibilities.len() {
-            let p1 = &possibilities[i1];
-            if check_compatible(p0, p1) {
-                res.insert(get_combination(p0, p1, weights));
-            }
-        }
-    }
-    res
-}
-
-fn check_compatible(p0: &Vec<bool>, p1: &Vec<bool>) -> bool {
-    if p0.len() != p1.len() {
-        return false
-    }
-    for (elem0, elem1) in p0.iter().zip(p1.iter()) {
-        if *elem0 && *elem1 {
-            return false
-        }
-    }
-    true
-}
-
-fn get_combination(p0: &Vec<bool>, p1: &Vec<bool>, weights: &Vec<u128>) -> Vec<Location> {
-    let order = get_order(p0, p1, weights);
-    let mut res = vec![order[2]; p0.len()];
-    for (index, (elem0, elem1)) in p0.iter().zip(p1.iter()).enumerate() {
-        assert!( !(*elem0 && *elem1) );
-        if *elem0 {
-            res[index] = order[0];
-        }
-        if *elem1 {
-            res[index] = order[1];
-        }
-    }
-    res
-}
-
-fn get_order(p0: &Vec<bool>, p1: &Vec<bool>, weights: &Vec<u128>) -> Vec<Location> {
-    let mut p2 = vec![false; p0.len()];
-    for (index, (elem0, elem1)) in p0.iter().zip(p1.iter()).enumerate() {
-        if !elem0 && !elem1 {
-            p2[index] = true;
-        }
-    }
-    let used = [p0, p1, &p2];
-
-    let mut order = vec![0, 1, 2];
-
-    // sort by quantum entanglement
-    let quantum_entanglements: Vec<u128> = used.iter()
-        .map(|x| calculate_quantum_entanglement(*x, weights)).collect();
-    assert_eq!(quantum_entanglements.len(), 3);
-    order.sort_by(|x0, x1| {
-        quantum_entanglements[*x0].cmp(&quantum_entanglements[*x1])
-    });
-
-    // sort by item counts
-    let counts: Vec<usize> =
-        used.iter().map(|x| calculate_count(x)).collect();
-    assert_eq!(counts.len(), 3);
-    order.sort_by(|x0, x1| {
-        counts[*x0].cmp(&counts[*x1])
-    });
-
-    let mut res = vec![Location::Left; 3];
-    for (index, elem) in order.iter().enumerate() {
-        res[*elem] = Location::from(index);
-    }
-
-    res
-}
-
-fn count(locs: &Vec<Location>) -> usize {
-    locs.iter().filter(|x| **x == Location::Passenger).count()
-}
-
-fn quantum_entanglement(locs: &Vec<Location>, weights: &Vec<u128>) -> u128 {
-    locs.iter().zip(weights.iter())
-        .filter(|(l, _)| **l == Location::Passenger)
-        .map(|(_, w)| *w)
-        .product()
-}
-
-fn print(split: &Vec<Location>, weights: &Vec<u128>) {
-    for (loc, weight) in split.iter().zip(weights.iter()) {
-        if *loc == Location::Passenger {
-            print!("{} ", weight);
-        }
-    }
-    print!("| ");
-    for (loc, weight) in split.iter().zip(weights.iter()) {
-        if *loc == Location::Left {
-            print!("{} ", weight);
-        }
-    }
-    print!("| ");
-    for (loc, weight) in split.iter().zip(weights.iter()) {
-        if *loc == Location::Right {
-            print!("{} ", weight);
-        }
-    }
-    println!()
-}
-
-#[derive(Copy, Clone, Hash, Eq, PartialEq)]
-enum Location {
-    Passenger,
-    Left,
-    Right,
-}
-
-impl Location {
-    fn from(index: usize) -> Self {
-        match index {
-            0 => Self::Passenger,
-            1 => Self::Left,
-            2 => Self::Right,
-            _ => panic!(),
-        }
-    }
-}
-
 const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
+const ERR_NO_SOLUTION: &str = "No solution was found";
 
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
     use super::*;
 
-    #[test]
-    fn check_examples_part_1() {
-        let v = vec![
+    fn get_example() -> Vec<String> {
+        vec![
             "1".to_string(),
             "2".to_string(),
             "3".to_string(),
@@ -295,7 +172,12 @@ mod test {
             "9".to_string(),
             "10".to_string(),
             "11".to_string(),
-        ];
+        ]
+    }
+
+    #[test]
+    fn check_examples_part_1() {
+        let v = get_example();
 
         assert_eq!(part_1(&v), Ok("99".to_string()));
     }
@@ -305,21 +187,23 @@ mod test {
         let input_name = "input/year_2015/input_day_24.txt";
         let input = read_lines_untrimmed_from_file(input_name)?;
 
-        assert_eq!(part_1(&input), Ok("expected".to_string())); // TODO
+        assert_eq!(part_1(&input), Ok("11266889531".to_string()));
         Ok(())
     }
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["input".to_string()]), Ok("expected".to_string()));
+        let v = get_example();
+
+        assert_eq!(part_2(&v), Ok("44".to_string()));
     }
 
     #[test]
     fn check_input_part_2() -> std::io::Result<()> {
-        let input_name = "input/year_2015/input_day_XX.txt";    // TODO
+        let input_name = "input/year_2015/input_day_24.txt";
         let input = read_lines_untrimmed_from_file(input_name)?;
 
-        assert_eq!(part_2(&input), Ok("expected".to_string())); // TODO
+        assert_eq!(part_2(&input), Ok("77387711".to_string()));
         Ok(())
     }
 }
