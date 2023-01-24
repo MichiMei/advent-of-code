@@ -165,12 +165,19 @@ fn run_2015() -> io::Result<()> {
     println!("y2015-d23_p1: {}", year_2015::day_23::part_1(&input).unwrap());
     println!("y2015-d23_p2: {}", year_2015::day_23::part_2(&input).unwrap());
      */
-
+    /*
     // day24
     let input_name = "input/year_2015/input_day_24.txt";
     let input = read_lines_untrimmed_from_file(input_name)?;
     println!("y2015-d24_p1: {}", year_2015::day_24::part_1(&input).unwrap());
     println!("y2015-d24_p2: {}", year_2015::day_24::part_2(&input).unwrap());
+     */
+
+    // day25
+    let input_name = "input/year_2015/input_day_25.txt";
+    let input = read_lines_untrimmed_from_file(input_name)?;
+    println!("y2015-d25_p1: {}", year_2015::day_25::part_1(&input).unwrap());
+    println!("y2015-d25_p2: {}", year_2015::day_25::part_2(&input).unwrap());
 
     /*
     // dayXX    // TODO
