@@ -3,6 +3,7 @@ use std::io;
 use std::io::{BufRead, BufReader, stdin};
 
 pub mod year_2015;
+pub mod year_2016;
 
 pub fn read_lines_trimmed_from_file(file_name: &str) -> io::Result<Vec<String>> {
     let file = File::open(file_name)?;
