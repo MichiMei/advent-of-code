@@ -1,8 +1,8 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     unimplemented!()
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
     unimplemented!()
 }
 
