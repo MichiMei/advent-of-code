@@ -71,3 +71,33 @@ pub fn read_lines_untrimmed_from_stdin() -> Vec<String> {
     }
     res
 }
+
+pub mod errors {
+    use std::error::Error;
+    use std::fmt::{Debug, Display, Formatter};
+
+    #[derive(Debug, PartialEq)]
+    pub enum AoCError<Message: Debug + Display> {
+        UnexpectedInputLength(Message),
+        BadInputFormat(Message),
+        NoSolutionFoundError(Message),
+    }
+
+    impl<Message: Debug + Display> Display for AoCError<Message> {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            match self {
+                AoCError::UnexpectedInputLength(message) => {
+                    write!(f, "Input line count is not supported:\n{}", message)
+                }
+                AoCError::BadInputFormat(message) => {
+                    write!(f, "The input has unexpected input:\n{}", message)
+                }
+                AoCError::NoSolutionFoundError(message) => {
+                    write!(f, "No solution was found for the input:\n{}", message)
+                }
+            }
+        }
+    }
+
+    impl<Message: Debug + Display> Error for AoCError<Message> {}
+}
