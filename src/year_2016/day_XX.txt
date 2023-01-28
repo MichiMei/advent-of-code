@@ -1,9 +1,11 @@
+use crate::errors::AoCError;
+
 pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
-    unimplemented!()
+    todo!()
 }
 
 pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
-    unimplemented!()
+    todo!()
 }
 
 #[cfg(test)]

@@ -81,6 +81,7 @@ pub mod errors {
         UnexpectedInputLength(Message),
         BadInputFormat(Message),
         NoSolutionFoundError(Message),
+        MultipleSolutionsFoundError(Message)
     }
 
     impl<Message: Debug + Display> Display for AoCError<Message> {
@@ -94,6 +95,9 @@ pub mod errors {
                 }
                 AoCError::NoSolutionFoundError(message) => {
                     write!(f, "No solution was found for the input:\n{}", message)
+                }
+                AoCError::MultipleSolutionsFoundError(message) => {
+                    write!(f, "Multiple solutions were found for the input:\n{}", message)
                 }
             }
         }
