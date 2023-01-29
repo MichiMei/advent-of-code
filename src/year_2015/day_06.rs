@@ -1,21 +1,23 @@
+
+
 pub fn part_1(input: &[String]) -> Result<String, &str> {
     let line = vec![false; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
         let (mode, c0, c1) = parse_line(line)?;
-        for x in c0.0..=c1.0 {
-            for y in c0.1..=c1.1 {
+        for row in grid[c0.0..=c1.0].iter_mut() {
+            for elem in row[c0.1..=c1.1].iter_mut() {
                 match mode {
-                    Mode::Turn(status) => grid[x][y] = status,
-                    Mode::Toggle => grid[x][y] = !grid[x][y],
+                    Mode::Turn(status) => *elem = status,
+                    Mode::Toggle => *elem = !*elem
                 }
             }
         }
     }
     let mut count = 0usize;
-    for x in 0..grid.len() {
-        for y in 0..grid[x].len() {
-            if grid[x][y] {
+    for row in grid.iter() {
+        for elem in row.iter() {
+            if *elem {
                 count += 1;
             }
         }
@@ -28,31 +30,28 @@ pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut grid = vec![line; 1000];
     for line in input {
         let (mode, c0, c1) = parse_line(line)?;
-        for x in c0.0..=c1.0 {
-            for y in c0.1..=c1.1 {
+        for row in grid[c0.0..=c1.0].iter_mut() {
+            for elem in row[c0.1..=c1.1].iter_mut() {
                 match mode {
-                    Mode::Turn(status) => {
-                        if status {
-                            grid[x][y] += 1;
-                        } else if grid[x][y] > 0 {
-                            grid[x][y] -= 1;
-                        }
-                    }
-                    Mode::Toggle => grid[x][y] += 2,
+                    Mode::Turn(true) => *elem += 1,
+                    Mode::Turn(false) => *elem = elem.saturating_sub(1),
+                    Mode::Toggle => *elem += 2,
                 }
             }
         }
     }
     let mut count = 0i128;
-    for x in 0..grid.len() {
-        for y in 0..grid[x].len() {
-            count += grid[x][y] as i128;
+    for row in grid.iter() {
+        for elem in row.iter() {
+            count += *elem as i128
         }
     }
     Ok(count.to_string())
 }
 
-fn parse_line(str: &str) -> Result<(Mode, (usize, usize), (usize, usize)), &str> {
+type Command = (Mode, (usize, usize), (usize, usize));
+
+fn parse_line(str: &str) -> Result<Command, &str> {
     if str.starts_with("turn") {
         let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 5 {
