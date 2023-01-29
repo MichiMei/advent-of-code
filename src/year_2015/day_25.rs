@@ -1,4 +1,4 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_INPUT_MALFORMED)
     }
@@ -14,7 +14,7 @@ pub fn part_2(_: &Vec<String>) -> Result<String, &str> {
 }
 
 fn parse_input(line: &str) -> Result<(usize, usize), &str> {
-    let words: Vec<&str> = line.split(" ").collect();
+    let words: Vec<&str> = line.split(' ').collect();
     assert_eq!(words.len(), 19);
     let mut row_str = words[16];
     row_str = &row_str[..row_str.len()-1];
@@ -59,7 +59,7 @@ mod test {
     use crate::read_lines_untrimmed_from_file;
     use super::*;
 
-    const TABLE: [[i32; 6]; 6] = [
+    const EXAMPLE_SOLUTIONS: [[i32; 6]; 6] = [
         [20151125, 18749137, 17289845, 30943339, 10071777, 33511524],
         [31916031, 21629792, 16929656,  7726640, 15514188,  4041754],
         [16080970,  8057251,  1601130,  7981243, 11661866, 16474243],
@@ -70,7 +70,7 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        for (row_index, row) in TABLE.iter().enumerate() {
+        for (row_index, row) in EXAMPLE_SOLUTIONS.iter().enumerate() {
             for (col_index, expected) in row.iter().enumerate() {
                 let input = vec![
                     format!("To continue, please consult the code grid in the manual.  \

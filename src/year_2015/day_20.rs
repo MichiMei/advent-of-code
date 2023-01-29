@@ -1,4 +1,4 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_INPUT_MALFORMED)
     }
@@ -10,7 +10,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(index.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_INPUT_MALFORMED)
     }
@@ -48,7 +48,7 @@ fn calculate_array_50(max_house: usize) -> Vec<usize> {
     vec
 }
 
-fn find_first_bigger(vec: &Vec<usize>, target: usize) -> Option<usize> {
+fn find_first_bigger(vec: &[usize], target: usize) -> Option<usize> {
     for (index, val) in vec.iter().enumerate() {
         if *val >= target {
             return Some(index+1)
@@ -57,7 +57,7 @@ fn find_first_bigger(vec: &Vec<usize>, target: usize) -> Option<usize> {
     None
 }
 
-fn find_first_bigger_with_factor(vec: &Vec<usize>, target: usize, factor: usize) -> Option<usize> {
+fn find_first_bigger_with_factor(vec: &[usize], target: usize, factor: usize) -> Option<usize> {
     for (index, val) in vec.iter().enumerate() {
         if *val*factor >= target {
             return Some(index+1)
@@ -75,9 +75,9 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["10".to_string()]), Ok("1".to_string()));
-        assert_eq!(part_1(&vec!["70".to_string()]), Ok("4".to_string()));
-        assert_eq!(part_1(&vec!["150".to_string()]), Ok("8".to_string()));
+        assert_eq!(part_1(&["10".to_string()]), Ok("1".to_string()));
+        assert_eq!(part_1(&["70".to_string()]), Ok("4".to_string()));
+        assert_eq!(part_1(&["150".to_string()]), Ok("8".to_string()));
     }
 
     #[test]
@@ -91,7 +91,7 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["100".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_2(&["100".to_string()]), Ok("6".to_string()));
     }
 
     #[test]

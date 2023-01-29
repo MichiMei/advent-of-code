@@ -1,17 +1,17 @@
 use std::iter::Peekable;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let mut sum = 0;
 
     for line in input {
         let res = remove_escape_characters(line)?;
         sum += line.len();
-        sum -= res.chars().collect::<Vec<char>>().len();
+        sum -= res.chars().count();
     }
     Ok(sum.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut sum = 0;
 
     for line in input {
@@ -101,15 +101,10 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        let v0 = vec!["\"\"".to_string()];
-        let v1 = vec!["\"abc\"".to_string()];
-        let v2 = vec!["\"aaa\\\"aaa\"".to_string()];
-        let v3 = vec!["\"\\x27\"".to_string()];
-
-        assert_eq!(part_1(&v0), Ok("2".to_string()));
-        assert_eq!(part_1(&v1), Ok("2".to_string()));
-        assert_eq!(part_1(&v2), Ok("3".to_string()));
-        assert_eq!(part_1(&v3), Ok("5".to_string()));
+        assert_eq!(part_1(&["\"\"".to_string()]), Ok("2".to_string()));
+        assert_eq!(part_1(&["\"abc\"".to_string()]), Ok("2".to_string()));
+        assert_eq!(part_1(&["\"aaa\\\"aaa\"".to_string()]), Ok("3".to_string()));
+        assert_eq!(part_1(&["\"\\x27\"".to_string()]), Ok("5".to_string()));
 
         let v4 = vec![
             "\"\"".to_string(),
@@ -132,15 +127,10 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        let v0 = vec!["\"\"".to_string()];
-        let v1 = vec!["\"abc\"".to_string()];
-        let v2 = vec!["\"aaa\\\"aaa\"".to_string()];
-        let v3 = vec!["\"\\x27\"".to_string()];
-
-        assert_eq!(part_2(&v0), Ok("4".to_string()));
-        assert_eq!(part_2(&v1), Ok("4".to_string()));
-        assert_eq!(part_2(&v2), Ok("6".to_string()));
-        assert_eq!(part_2(&v3), Ok("5".to_string()));
+        assert_eq!(part_2(&["\"\"".to_string()]), Ok("4".to_string()));
+        assert_eq!(part_2(&["\"abc\"".to_string()]), Ok("4".to_string()));
+        assert_eq!(part_2(&["\"aaa\\\"aaa\"".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_2(&["\"\\x27\"".to_string()]), Ok("5".to_string()));
 
         let v4 = vec![
             "\"\"".to_string(),

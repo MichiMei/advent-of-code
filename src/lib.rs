@@ -67,7 +67,7 @@ pub fn read_lines_untrimmed_from_stdin() -> Vec<String> {
             Ok(str) => str,
             Err(_) => continue
         };
-        res.push(String::from(line));
+        res.push(line);
     }
     res
 }
@@ -140,11 +140,9 @@ pub mod md5_collision {
         }
 
         let nonce = mutex.load(Ordering::SeqCst);
-        if nonce == usize::MAX {
-            if !collision(&hash(&format!("{}{}", input, nonce)),
+        if nonce == usize::MAX && !collision(&hash(&format!("{}{}", input, nonce)),
                              collision_length) {
-                return Ok(None)
-            }
+            return Ok(None)
         }
 
         Ok(Some(nonce))

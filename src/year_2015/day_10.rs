@@ -1,4 +1,4 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -12,7 +12,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(start.len().to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -48,7 +48,7 @@ impl LASSequence {
         let mut iter = self.sequence.into_iter();
         let mut count = 1;
         let mut prev = iter.next().unwrap();
-        while let Some(val) = iter.next() {
+        for val in iter {
             if prev == val {
                 count += 1;
             } else {

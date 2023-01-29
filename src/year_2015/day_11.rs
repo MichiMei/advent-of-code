@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -9,7 +9,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(password.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -123,11 +123,8 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        let v0 = vec!["abcdefgh".to_string()];
-        assert_eq!(part_1(&v0), Ok("abcdffaa".to_string()));
-
-        let v1 = vec!["ghijklmn".to_string()];
-        assert_eq!(part_1(&v1), Ok("ghjaabcc".to_string()));
+        assert_eq!(part_1(&["abcdefgh".to_string()]), Ok("abcdffaa".to_string()));
+        assert_eq!(part_1(&["ghijklmn".to_string()]), Ok("ghjaabcc".to_string()));
     }
 
     #[test]

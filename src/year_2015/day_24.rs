@@ -1,6 +1,6 @@
 use std::cmp::min;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let weights = parse_input(input)?;
 
     let res = check_distributions(&weights, 3).ok_or(ERR_NO_SOLUTION)?;
@@ -8,7 +8,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(res.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let weights = parse_input(input)?;
 
     let res = check_distributions(&weights, 4).ok_or(ERR_NO_SOLUTION)?;
@@ -99,7 +99,7 @@ impl Distribution {
 
     fn add(&mut self, index: usize) {
         assert!(index < self.weights.len());
-        assert_eq!(self.active[index], false);
+        assert!(!self.active[index]);
 
         self.active[index] = true;
         self.count += 1;
@@ -144,7 +144,7 @@ impl Distribution {
 
 
 
-fn parse_input(input: &Vec<String>) -> Result<Vec<u128>, &str> {
+fn parse_input(input: &[String]) -> Result<Vec<u128>, &str> {
     let mut res = vec![];
     for line in input.iter() {
         res.push(line.parse().map_err(|_| ERR_INPUT_MALFORMED)?)

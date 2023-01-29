@@ -12,7 +12,7 @@ impl Character {
         Self{hit_points, damage, armor}
     }
 
-    pub fn from_input(input: &Vec<String>) -> Option<Self> {
+    pub fn from_input(input: &[String]) -> Option<Self> {
         if input.len() < 2 || input.len() > 3 {
             return None
         }
@@ -32,8 +32,8 @@ impl Character {
     }
 
     pub fn attacked_by(&mut self, attacker: &Character) -> bool {
-        let real_damage = attacker.damage.checked_sub(self.armor).unwrap_or(0);
-        self.hit_points = self.hit_points.checked_sub(real_damage).unwrap_or(0);
+        let real_damage = attacker.damage.saturating_sub(self.armor);
+        self.hit_points = self.hit_points.saturating_sub(real_damage);
         if self.hit_points == 0 {
             return false
         }

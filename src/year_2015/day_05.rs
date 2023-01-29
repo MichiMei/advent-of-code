@@ -1,17 +1,17 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let mut count = 0;
     for line in input {
-        if is_nice_part_1(&line) {
+        if is_nice_part_1(line) {
             count += 1;
         }
     }
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut count = 0;
     for line in input {
-        if is_nice_part_2(&line) {
+        if is_nice_part_2(line) {
             count += 1;
         }
     }
@@ -108,11 +108,11 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["ugknbfddgicrmopn".to_string()]), Ok("1".to_string()));
-        assert_eq!(part_1(&vec!["aaa".to_string()]), Ok("1".to_string()));
-        assert_eq!(part_1(&vec!["jchzalrnumimnmhp".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_1(&vec!["haegwjzuvuyypxyu".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_1(&vec!["dvszwmarrgswjxmb".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["ugknbfddgicrmopn".to_string()]), Ok("1".to_string()));
+        assert_eq!(part_1(&["aaa".to_string()]), Ok("1".to_string()));
+        assert_eq!(part_1(&["jchzalrnumimnmhp".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["haegwjzuvuyypxyu".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["dvszwmarrgswjxmb".to_string()]), Ok("0".to_string()));
     }
 
     #[test]
@@ -126,10 +126,10 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["qjhvhtzxzqqjkmpb".to_string()]), Ok("1".to_string()));
-        assert_eq!(part_2(&vec!["xxyxx".to_string()]), Ok("1".to_string()));
-        assert_eq!(part_2(&vec!["uurcxstgmygtbstg".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_2(&vec!["ieodomkazucvgmuy".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_2(&["qjhvhtzxzqqjkmpb".to_string()]), Ok("1".to_string()));
+        assert_eq!(part_2(&["xxyxx".to_string()]), Ok("1".to_string()));
+        assert_eq!(part_2(&["uurcxstgmygtbstg".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_2(&["ieodomkazucvgmuy".to_string()]), Ok("0".to_string()));
     }
 
     #[test]

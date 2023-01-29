@@ -1,4 +1,4 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let sues = parse_sues(input)?;
     let prop_str = "children: 3, cats: 7, samoyeds: 2, pomeranians: 3, akitas: 0, \
         vizslas: 0, goldfish: 5, trees: 3, cars: 2, perfumes: 1";
@@ -19,7 +19,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(compatible.ok_or(ERR_NO_COMPATIBLE)?.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let sues = parse_sues(input)?;
     let prop_str = "children: 3, cats: 7, samoyeds: 2, pomeranians: 3, akitas: 0, \
         vizslas: 0, goldfish: 5, trees: 3, cars: 2, perfumes: 1";
@@ -40,7 +40,7 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
     Ok(compatible.ok_or(ERR_NO_COMPATIBLE)?.to_string())
 }
 
-fn parse_sues(input: &Vec<String>) -> Result<Vec<Sue>, &str> {
+fn parse_sues(input: &[String]) -> Result<Vec<Sue>, &str> {
     let mut res = vec![];
     for line in input {
         res.push(Sue::from(line)?);
@@ -61,7 +61,7 @@ impl Sue {
         let x = &line[4..end];
 
         let index = x.parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-        let prop_strings: Vec<&str> = (&line[end+2..]).split(", ").collect();
+        let prop_strings: Vec<&str> = line[end+2..].split(", ").collect();
 
         let props = Properties::from(&prop_strings)?;
 

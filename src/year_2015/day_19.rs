@@ -3,7 +3,7 @@ use std::iter::Peekable;
 use std::ops::{Add, Sub};
 use std::str::Chars;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() < 3 || !input[input.len()-2].is_empty() {
         return Err(ERR_INPUT_MALFORMED)
     }
@@ -18,7 +18,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(result_str.len().to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let elems = Elements::from(&input[0..input.len()-2])?;
     let rules = parse_rules(&input[0..input.len()-2], &elems)?;
     let goal = Molecule::from_string(&input[input.len()-1], &elems)?;
@@ -46,7 +46,7 @@ fn replace(start_str: &str, repl: &Replacement) -> HashSet<String> {
         let s0 = start_str[0..location].to_string();
         let s1 = &repl.replacement[..];
         let s2 = &start_str[location+repl.pattern.len()..];
-        let new = String::from(s0+s1+s2);
+        let new = s0 + s1 + s2;
         res.insert(new);
         last = location+1;
     }
@@ -74,7 +74,7 @@ impl Replacement {
 }
 
 fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Molecule, elems: &Elements, r_count: usize, max: usize, dbg: &str) -> Option<usize> {
-    if rules.len() == 0 {
+    if rules.is_empty() {
         return if molecule == goal {
             let m_count = goal.count_intermediates(elems) - molecule.count_intermediates(elems);
             Some(m_count + r_count)
@@ -84,7 +84,7 @@ fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Mole
     }
     let rule = &rules[0];
 
-    let mut min = build_molecule_rule_wise(&molecule, &rules[1..], goal, elems, r_count, max, &format!("{} 0", dbg));
+    let mut min = build_molecule_rule_wise(molecule, &rules[1..], goal, elems, r_count, max, &format!("{} 0", dbg));
     let mut new_molecule = molecule.clone();
     for c in 1..=max {
         new_molecule = &new_molecule + rule;
@@ -178,7 +178,7 @@ impl Elements {
     }
 
     fn get_index(&self, name: &str) -> Option<usize> {
-        let tmp = self.index.get(name).map(|x| *x);
+        let tmp = self.index.get(name).copied();
         if tmp.is_some() && !self.terminal[tmp.unwrap()] {
             assert!(self.template_intermediate.is_some());
             return self.template_intermediate
@@ -253,9 +253,7 @@ impl Molecule {
 
 fn parse_elem<I>(chars: &mut Peekable<I>) -> Option<String>
     where I: Iterator<Item = char> {
-    if chars.peek().is_none() {
-        return None
-    }
+    chars.peek()?;
     let mut res = format!("{}", chars.next().unwrap());
     if chars.peek().is_some() && chars.peek().unwrap().is_lowercase() {
         res = format!("{}{}", res, chars.next().unwrap());

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     assert_eq!(input.len(), 1);
     let line = &input[0];
     let commands = Commands::new(line);
@@ -20,7 +20,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(dist.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     assert_eq!(input.len(), 1);
     let line = &input[0];
     let commands = Commands::new(line);
@@ -81,7 +81,7 @@ impl<'a> Commands<'a> {
             _ => return Err(ERR_INPUT_MALFORMED),
         };
 
-        let steps = (&next_str[1..]).parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+        let steps = next_str[1..].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
 
         Ok(Some((direction, steps)))
     }
@@ -148,20 +148,9 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        let v = vec![
-            "R2, L3".to_string(),
-        ];
-        assert_eq!(part_1(&v), Ok("5".to_string()));
-
-        let v = vec![
-            "R2, R2, R2".to_string(),
-        ];
-        assert_eq!(part_1(&v), Ok("2".to_string()));
-
-        let v = vec![
-            "R5, L5, R5, R3".to_string(),
-        ];
-        assert_eq!(part_1(&v), Ok("12".to_string()));
+        assert_eq!(part_1(&["R2, L3".to_string()]), Ok("5".to_string()));
+        assert_eq!(part_1(&["R2, R2, R2".to_string()]), Ok("2".to_string()));
+        assert_eq!(part_1(&["R5, L5, R5, R3".to_string()]), Ok("12".to_string()));
     }
 
     #[test]
@@ -175,10 +164,7 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        let v = vec![
-            "R8, R4, R4, R8".to_string(),
-        ];
-        assert_eq!(part_2(&v), Ok("4".to_string()));
+        assert_eq!(part_2(&["R8, R4, R4, R8".to_string()]), Ok("4".to_string()));
     }
 
     #[test]

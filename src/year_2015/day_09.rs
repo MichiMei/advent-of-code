@@ -1,32 +1,24 @@
 use std::collections::{HashMap, HashSet};
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let distances = parse_input(input)?;
     let remaining: HashSet<usize> = (0..distances.len()).collect();
 
     let res = find_shortest_path_rec(&distances, &remaining, 0, None, None);
 
-    if res.is_none() {
-        Err(ERR_NO_PATH_FOUND)
-    } else {
-        Ok(res.unwrap().to_string())
-    }
+    res.ok_or(ERR_NO_PATH_FOUND).map(|t| t.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let distances = parse_input(input)?;
     let remaining: HashSet<usize> = (0..distances.len()).collect();
 
     let res = find_longest_path_rec(&distances, &remaining, 0, None);
 
-    if res.is_none() {
-        Err(ERR_NO_PATH_FOUND)
-    } else {
-        Ok(res.unwrap().to_string())
-    }
+    res.ok_or(ERR_NO_PATH_FOUND).map(|t| t.to_string())
 }
 
-fn parse_input(input: &Vec<String>) -> Result<Vec<Vec<u16>>, &str> {
+fn parse_input(input: &[String]) -> Result<Vec<Vec<u16>>, &str> {
     let mut tmp = vec![];
     for line in input {
         tmp.push(parse_line(line)?);
@@ -57,7 +49,7 @@ fn parse_input(input: &Vec<String>) -> Result<Vec<Vec<u16>>, &str> {
 }
 
 fn parse_line(str: &str) -> Result<(String, String, u16), &str> {
-    let words: Vec<&str> = str.split(" ").collect();
+    let words: Vec<&str> = str.split(' ').collect();
     if words.len() != 5 {
         return Err(ERR_INPUT_MALFORMED)
     }
@@ -86,11 +78,12 @@ fn find_shortest_path_rec(distances: &Vec<Vec<u16>>, remaining: &HashSet<usize>,
     let mut remaining_new = remaining.clone();
     for elem in remaining.iter() {
         assert!(remaining_new.remove(elem));
-        let length_new = if current.is_some() {
-            length + distances[current.unwrap()][*elem]
+        let length_new = if let Some(current) = current {
+            length + distances[current][*elem]
         } else {
             length
         };
+
         let res = find_shortest_path_rec(distances, &remaining_new, length_new,
                                          Some(*elem), new_shortest);
         if res.is_some() && (new_shortest.is_none() || new_shortest.unwrap() > res.unwrap()) {
@@ -117,8 +110,8 @@ fn find_longest_path_rec(distances: &Vec<Vec<u16>>, remaining: &HashSet<usize>, 
     let mut remaining_new = remaining.clone();
     for elem in remaining.iter() {
         assert!(remaining_new.remove(elem));
-        let length_new = if current.is_some() {
-            length + distances[current.unwrap()][*elem]
+        let length_new = if let Some(current) = current {
+            length + distances[current][*elem]
         } else {
             length
         };

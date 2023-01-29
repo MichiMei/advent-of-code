@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 use crate::year_2015::lib_2015::{Character, Item};
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
     let player = Character::new(100, 0, 0);
 
@@ -10,7 +10,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(cost.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
     let player = Character::new(100, 0, 0);
 

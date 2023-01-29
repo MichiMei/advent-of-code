@@ -1,10 +1,10 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let mut pc = SOTAComputer::from_input(input, 0)?;
     pc.run();
     Ok(pc.register_b.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut pc = SOTAComputer::from_input(input, 1)?;
     pc.run();
     Ok(pc.register_b.to_string())
@@ -18,7 +18,7 @@ struct SOTAComputer {
 }
 
 impl SOTAComputer {
-    fn from_input(input: &Vec<String>, register_a: usize) -> Result<Self, &'static str> {
+    fn from_input(input: &[String], register_a: usize) -> Result<Self, &'static str> {
         let register_b = 0;
         let mut instructions = vec![];
         for line in input.iter() {
@@ -136,8 +136,8 @@ enum Instruction {
 
 impl Instruction {
     fn from(line: &str) -> Option<Self> {
-        let line = line.replace(",", "");
-        let words: Vec<&str> = line.split(" ").collect();
+        let line = line.replace(',', "");
+        let words: Vec<&str> = line.split(' ').collect();
         if words.len() < 2 || words.len() > 3 {
             return None
         }

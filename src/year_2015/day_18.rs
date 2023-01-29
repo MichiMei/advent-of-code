@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::mem::swap;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let mut lights = Lights::from(input)?;
     let mut tmp = Lights::new(lights.grid.len(), lights.grid[0].len());
 
@@ -16,7 +16,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(lights_ref.count_on().to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut lights = Lights::from(input)?;
     let mut tmp = Lights::new(lights.grid.len(), lights.grid[0].len());
 
@@ -44,7 +44,7 @@ impl Lights {
         Self{grid}
     }
 
-    fn from(input: &Vec<String>) -> Result<Self, &'static str> {
+    fn from(input: &[String]) -> Result<Self, &'static str> {
         let mut grid = vec![];
         for line in input {
             let mut row = vec![];
@@ -154,9 +154,9 @@ impl Display for Lights {
                     write!(f, ".").unwrap();
                 }
             }
-            write!(f, "\n").unwrap();
+            writeln!(f).unwrap();
         }
-        write!(f, "\n")
+        writeln!(f)
     }
 }
 

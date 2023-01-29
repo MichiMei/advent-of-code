@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use crate::year_2015::lib_2015::Character;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let player = Character::new(50, 0, 0);
     let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
     let round = Round::new(player, boss, 500, false);
@@ -9,7 +9,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(res.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let player = Character::new(50, 0, 0);
     let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
     let round = Round::new(player, boss, 500, true);
@@ -28,10 +28,8 @@ fn get_min_mana(initial: Round) -> Option<usize> {
         //println!("starting with {} parallel realities", current.len());
         for current in current {
             if current.finished() {
-                if current.player_won() {
-                    if minimum.is_none() || current.mana_spend < minimum.unwrap() {
-                        minimum = Some(current.mana_spend);
-                    }
+                if current.player_won() && (minimum.is_none() || current.mana_spend < minimum.unwrap()) {
+                    minimum = Some(current.mana_spend);
                 }
                 continue
             }
@@ -53,7 +51,7 @@ fn get_min_mana(initial: Round) -> Option<usize> {
 
 #[derive(Clone, Hash, Eq, PartialEq)]
 struct Round {
-    player: Wizzard,
+    player: Wizard,
     boss: Character,
     mana_spend: usize,
     players_turn: bool,
@@ -63,8 +61,8 @@ struct Round {
 
 impl Round {
     fn new(player: Character, boss: Character, mana: usize, hard_mode: bool) -> Self {
-        let player = Wizzard::from_character(player, mana);
-        Self{player, boss, mana_spend: 0, players_turn: true, dbg: format!(""), hard_mode}
+        let player = Wizard::from_character(player, mana);
+        Self{player, boss, mana_spend: 0, players_turn: true, dbg: String::new(), hard_mode}
     }
 
     fn finished(&self) -> bool {
@@ -153,10 +151,9 @@ impl Round {
     }
 
     fn apply_effects(&mut self) {
-        if self.player.effect_durations[SHIELD] > 0 {
-            self.player.effect_durations[SHIELD] -= 1;
-        } else if self.player.effect_durations[SHIELD] == 0 {
-            self.player.player.armor = 0;
+        match self.player.effect_durations[SHIELD] {
+            0 => self.player.player.armor = 0,
+            _ => self.player.effect_durations[SHIELD] -= 1,
         }
 
         if self.player.effect_durations[POISON] > 0 {
@@ -170,15 +167,15 @@ impl Round {
 }
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq)]
-struct Wizzard {
+struct Wizard {
     mana: usize,
     effect_durations: [usize; 3],
     player: Character,
 }
 
-impl Wizzard {
+impl Wizard {
     fn from_character(player: Character, mana: usize) -> Self {
-        Wizzard{mana, effect_durations: [0; 3], player}
+        Wizard {mana, effect_durations: [0; 3], player}
     }
 
     fn magic_missile(&mut self, boss: &mut Character, mana_spend: &mut usize) -> bool {

@@ -1,25 +1,25 @@
 use std::cmp::min;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let mut sum = 0;
     for line in input.iter() {
-        let (l, w, h) = parse_side_lengths(&line)?;
+        let (l, w, h) = parse_side_lengths(line)?;
         sum += calc_surface(l, w, h) + calc_smallest_side(l, w, h);
     }
     Ok(sum.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut sum = 0;
     for line in input.iter() {
-        let (l, w, h) = parse_side_lengths(&line)?;
+        let (l, w, h) = parse_side_lengths(line)?;
         sum += calc_volume(l, w, h) + calc_shortest_equator(l, w, h);
     }
     Ok(sum.to_string())
 }
 
 fn parse_side_lengths(line: &str) -> Result<(usize, usize, usize), &str> {
-    let split: Vec<&str> = line.split("x").collect();
+    let split: Vec<&str> = line.split('x').collect();
     if split.len() != 3 {
         return Err(ERR_VALUE_MISSING)
     }
@@ -66,8 +66,8 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["2x3x4".to_string()]), Ok("58".to_string()));
-        assert_eq!(part_1(&vec!["1x1x10".to_string()]), Ok("43".to_string()));
+        assert_eq!(part_1(&["2x3x4".to_string()]), Ok("58".to_string()));
+        assert_eq!(part_1(&["1x1x10".to_string()]), Ok("43".to_string()));
     }
 
     #[test]
@@ -80,8 +80,8 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["2x3x4".to_string()]), Ok("34".to_string()));
-        assert_eq!(part_2(&vec!["1x1x10".to_string()]), Ok("14".to_string()));
+        assert_eq!(part_2(&["2x3x4".to_string()]), Ok("34".to_string()));
+        assert_eq!(part_2(&["1x1x10".to_string()]), Ok("14".to_string()));
     }
 
     #[test]

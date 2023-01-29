@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::iter::Peekable;
 use std::str::Chars;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -17,7 +17,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(sum.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -40,7 +40,7 @@ fn get_next_int(chars: &mut Chars) -> Result<Option<i32>, &'static str> {
     };
 
     let mut number_vec = vec![first];
-    while let Some(next) = chars.next() {
+    for next in chars.by_ref() {
         if !next.is_numeric() {
             break;
         }
@@ -59,10 +59,10 @@ enum JsonValue {
 
 impl JsonValue {
     fn parse(str: &str) -> Result<JsonValue, &str> {
-        Self::parse_chars(&mut str.chars().peekable(), 0)
+        Self::parse_chars(&mut str.chars().peekable())
     }
 
-    fn parse_chars(chars: &mut Peekable<Chars>, debth: usize) -> Result<JsonValue, &'static str> {
+    fn parse_chars(chars: &mut Peekable<Chars>) -> Result<JsonValue, &'static str> {
         let json_value = match chars.peek().ok_or(ERR_JSON_EMPTY)? {
             '{' => {
                 chars.next();
@@ -93,7 +93,7 @@ impl JsonValue {
                             if !value_expected {
                                 return Err(ERR_JSON_MALFORMED)
                             }
-                            let key = match Self::parse_chars(chars, debth+1)? {
+                            let key = match Self::parse_chars(chars)? {
                                 JsonValue::String(str) => str,
                                 _ => return Err(ERR_JSON_MALFORMED),
                             };
@@ -103,7 +103,7 @@ impl JsonValue {
                                 return Err(ERR_JSON_MALFORMED)
                             }
                             trim(chars);
-                            let val = Self::parse_chars(chars, debth+1)?;
+                            let val = Self::parse_chars(chars)?;
                             content.insert(key, val);
                             value_expected = false;
                             comma_expected = true;
@@ -143,7 +143,7 @@ impl JsonValue {
                             if !value_expected {
                                 return Err(ERR_JSON_MALFORMED)
                             }
-                            content.push(Self::parse_chars(chars, debth+1)?);
+                            content.push(Self::parse_chars(chars)?);
                             value_expected = false;
                             comma_expected = true;
                             end_expected = true;
@@ -155,10 +155,10 @@ impl JsonValue {
             }
             '"' => {
                 chars.next();
-                read_string(chars).map(|val| Self::String(val))?
+                read_string(chars).map(Self::String)?
             }
             _ => {
-                read_int(chars).map(|val| Self::Number(val))?
+                read_int(chars).map(Self::Number)?
             }
         };
         trim(chars);
@@ -172,7 +172,7 @@ impl JsonValue {
         match self {
             JsonValue::Object(map) => {
                 let mut sum = 0;
-                for (_, elem) in map {
+                for elem in map.values() {
                     sum += elem.sum_red_aware();
                 }
                 sum
@@ -193,13 +193,10 @@ impl JsonValue {
         match self {
             JsonValue::Object(map) => {
                 for (_, other) in map.iter() {
-                    match other {
-                        JsonValue::String(str) => {
-                            if str == value {
-                                return true
-                            }
+                    if let JsonValue::String(str) = other {
+                        if str == value {
+                            return true
                         }
-                        _ => {}
                     }
                 }
             }
@@ -256,7 +253,7 @@ fn read_int(chars: &mut Peekable<Chars>) -> Result<i32, &'static str> {
 
 fn read_string(chars: &mut Peekable<Chars>) -> Result<String, &'static str> {
     let mut tmp = vec![];
-    while let Some(val) = chars.next() {
+    for val in chars.by_ref() {
         match val {
             '"' => return Ok(tmp.into_iter().collect()),
             _ => tmp.push(val),
@@ -288,14 +285,14 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["[1,2,3]".to_string()]), Ok("6".to_string()));
-        assert_eq!(part_1(&vec!["{\"a\":2,\"b\":4}".to_string()]), Ok("6".to_string()));
-        assert_eq!(part_1(&vec!["[[[3]]]".to_string()]), Ok("3".to_string()));
-        assert_eq!(part_1(&vec!["{\"a\":{\"b\":4},\"c\":-1}".to_string()]), Ok("3".to_string()));
-        assert_eq!(part_1(&vec!["{\"a\":[-1,1]}".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_1(&vec!["[-1,{\"a\":1}]".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_1(&vec!["[]".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_1(&vec!["{}".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["[1,2,3]".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_1(&["{\"a\":2,\"b\":4}".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_1(&["[[[3]]]".to_string()]), Ok("3".to_string()));
+        assert_eq!(part_1(&["{\"a\":{\"b\":4},\"c\":-1}".to_string()]), Ok("3".to_string()));
+        assert_eq!(part_1(&["{\"a\":[-1,1]}".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["[-1,{\"a\":1}]".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["[]".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["{}".to_string()]), Ok("0".to_string()));
     }
 
     #[test]
@@ -309,10 +306,10 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["[1,2,3]".to_string()]), Ok("6".to_string()));
-        assert_eq!(part_2(&vec!["[1,{\"c\":\"red\",\"b\":2},3]".to_string()]), Ok("4".to_string()));
-        assert_eq!(part_2(&vec!["{\"d\":\"red\",\"e\":[1,2,3,4],\"f\":5}".to_string()]), Ok("0".to_string()));
-        assert_eq!(part_2(&vec!["[1,\"red\",5]".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_2(&["[1,2,3]".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_2(&["[1,{\"c\":\"red\",\"b\":2},3]".to_string()]), Ok("4".to_string()));
+        assert_eq!(part_2(&["{\"d\":\"red\",\"e\":[1,2,3,4],\"f\":5}".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_2(&["[1,\"red\",5]".to_string()]), Ok("6".to_string()));
     }
 
     #[test]

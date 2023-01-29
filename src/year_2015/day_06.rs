@@ -1,8 +1,8 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let line = vec![false; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
-        let (mode, c0, c1) = parse_line(&line)?;
+        let (mode, c0, c1) = parse_line(line)?;
         for x in c0.0..=c1.0 {
             for y in c0.1..=c1.1 {
                 match mode {
@@ -23,21 +23,19 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let line = vec![0u8; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
-        let (mode, c0, c1) = parse_line(&line)?;
+        let (mode, c0, c1) = parse_line(line)?;
         for x in c0.0..=c1.0 {
             for y in c0.1..=c1.1 {
                 match mode {
                     Mode::Turn(status) => {
                         if status {
                             grid[x][y] += 1;
-                        } else {
-                            if grid[x][y] > 0 {
-                                grid[x][y] -= 1;
-                            }
+                        } else if grid[x][y] > 0 {
+                            grid[x][y] -= 1;
                         }
                     }
                     Mode::Toggle => grid[x][y] += 2,
@@ -56,7 +54,7 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
 
 fn parse_line(str: &str) -> Result<(Mode, (usize, usize), (usize, usize)), &str> {
     if str.starts_with("turn") {
-        let words: Vec<&str> = str.split(" ").collect();
+        let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 5 {
             return Err(ERR_INPUT_MALFORMED)
         }
@@ -69,7 +67,7 @@ fn parse_line(str: &str) -> Result<(Mode, (usize, usize), (usize, usize)), &str>
         let c1 = parse_corner(words[4])?;
         Ok((mode, c0, c1))
     } else if str.starts_with("toggle") {
-        let words: Vec<&str> = str.split(" ").collect();
+        let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 4 {
             return Err(ERR_INPUT_MALFORMED)
         }
@@ -83,7 +81,7 @@ fn parse_line(str: &str) -> Result<(Mode, (usize, usize), (usize, usize)), &str>
 }
 
 fn parse_corner(str: &str) -> Result<(usize, usize), &'static str> {
-    let words: Vec<&str> = str.split(",").collect();
+    let words: Vec<&str> = str.split(',').collect();
     if words.len() != 2 {
         return Err(ERR_INPUT_MALFORMED)
     }
@@ -130,9 +128,9 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["turn on 0,0 through 0,0".to_string()]),
+        assert_eq!(part_2(&["turn on 0,0 through 0,0".to_string()]),
                    Ok("1".to_string()));
-        assert_eq!(part_2(&vec!["toggle 0,0 through 999,999".to_string()]),
+        assert_eq!(part_2(&["toggle 0,0 through 999,999".to_string()]),
                    Ok("2000000".to_string()));
     }
 

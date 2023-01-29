@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{BitAnd, BitOr, Not, Shl, Shr};
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     let mut variables = HashMap::new();
     let mut gates = vec![];
     for line in input {
-        let gate = Gate::from(&line)?;
+        let gate = Gate::from(line)?;
         if let Some((name, val)) = gate.is_input() {
             variables.insert(name, val);
         } else {
@@ -38,11 +38,11 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     }
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     let mut variables = HashMap::new();
     let mut gates = vec![];
     for line in input {
-        let gate = Gate::from(&line)?;
+        let gate = Gate::from(line)?;
         if let Some((name, mut val)) = gate.is_input() {
             if &name == "b" {
                 val = 956;
@@ -89,7 +89,7 @@ enum Gate {
 
 impl Gate {
     pub fn from(str: &str) -> Result<Self, &str> {
-        let words: Vec<&str> = str.split(" ").collect();
+        let words: Vec<&str> = str.split(' ').collect();
         let operation = if words.len() == 3 {
             ""
         } else if words.len() == 4 {
@@ -157,8 +157,8 @@ impl Gate {
             Gate::And(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().bitand(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.bitand(v1)))
                 } else {
                     Err(self)
                 }
@@ -166,8 +166,8 @@ impl Gate {
             Gate::Or(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().bitor(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.bitor(v1)))
                 } else {
                     Err(self)
                 }
@@ -175,8 +175,8 @@ impl Gate {
             Gate::LShift(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().shl(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.shl(v1)))
                 } else {
                     Err(self)
                 }
@@ -184,8 +184,8 @@ impl Gate {
             Gate::RShift(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().shr(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.shr(v1)))
                 } else {
                     Err(self)
                 }
@@ -230,23 +230,17 @@ impl Input {
     pub fn from(str: &str) -> Result<Self, &str> {
         if let Ok(val) = str.parse() {
             Ok(Self::Value(val))
+        } else if str.is_empty() {
+            Err(ERR_INPUT_MALFORMED)
         } else {
-            if str.is_empty() {
-                Err(ERR_INPUT_MALFORMED)
-            } else {
-                Ok(Self::Variable(str.to_string()))
-            }
+            Ok(Self::Variable(str.to_string()))
         }
     }
 
     pub fn get_value(&self, variables: &HashMap<String, u16>) -> Option<u16> {
         match self {
             Input::Variable(name) => {
-                if let Some(val) = variables.get(name) {
-                    Some(*val)
-                } else {
-                    None
-                }
+                variables.get(name).copied()
             }
             Input::Value(val) => Some(*val),
         }

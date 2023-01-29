@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -16,7 +16,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(visited.len().to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -27,6 +27,17 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
     let str = input.first().unwrap();
     let mut iter = str.chars();
 
+    while let Some(c) = iter.next() {
+        santa = move_point(c, santa)?;
+        visited.insert(santa);
+        if let Some(c) = iter.next() {
+            roboter_santa = move_point(c, roboter_santa)?;
+            visited.insert(roboter_santa);
+        } else {
+            break;
+        }
+    }
+    /*
     loop {
         if let Some(c) = iter.next() {
             santa = move_point(c, santa)?;
@@ -40,7 +51,7 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
         } else {
             break;
         }
-    }
+    }*/
     Ok(visited.len().to_string())
 }
 
@@ -65,9 +76,9 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec![">".to_string()]), Ok("2".to_string()));
-        assert_eq!(part_1(&vec!["^>v<".to_string()]), Ok("4".to_string()));
-        assert_eq!(part_1(&vec!["^v^v^v^v^v".to_string()]), Ok("2".to_string()));
+        assert_eq!(part_1(&[">".to_string()]), Ok("2".to_string()));
+        assert_eq!(part_1(&["^>v<".to_string()]), Ok("4".to_string()));
+        assert_eq!(part_1(&["^v^v^v^v^v".to_string()]), Ok("2".to_string()));
     }
 
     #[test]
@@ -81,9 +92,9 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["^v".to_string()]), Ok("3".to_string()));
-        assert_eq!(part_2(&vec!["^>v<".to_string()]), Ok("3".to_string()));
-        assert_eq!(part_2(&vec!["^v^v^v^v^v".to_string()]), Ok("11".to_string()));
+        assert_eq!(part_2(&["^v".to_string()]), Ok("3".to_string()));
+        assert_eq!(part_2(&["^>v<".to_string()]), Ok("3".to_string()));
+        assert_eq!(part_2(&["^v^v^v^v^v".to_string()]), Ok("11".to_string()));
     }
 
     #[test]

@@ -1,4 +1,4 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -16,7 +16,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(counter.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, &str> {
     if input.len() != 1 {
         return Err(ERR_VEC_LENGTH)
     }
@@ -51,19 +51,19 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert!(part_1(&vec!["(())".to_string()]) == Ok("0".to_string()));
-        assert!(part_1(&vec!["()()".to_string()]) == Ok("0".to_string()));
+        assert!(part_1(&["(())".to_string()]) == Ok("0".to_string()));
+        assert!(part_1(&["()()".to_string()]) == Ok("0".to_string()));
 
-        assert!(part_1(&vec!["(((".to_string()]) == Ok("3".to_string()));
-        assert!(part_1(&vec!["(()(()(".to_string()]) == Ok("3".to_string()));
+        assert!(part_1(&["(((".to_string()]) == Ok("3".to_string()));
+        assert!(part_1(&["(()(()(".to_string()]) == Ok("3".to_string()));
 
-        assert!(part_1(&vec!["))(((((".to_string()]) == Ok("3".to_string()));
+        assert!(part_1(&["))(((((".to_string()]) == Ok("3".to_string()));
 
-        assert!(part_1(&vec!["())".to_string()]) == Ok("-1".to_string()));
-        assert!(part_1(&vec!["))(".to_string()]) == Ok("-1".to_string()));
+        assert!(part_1(&["())".to_string()]) == Ok("-1".to_string()));
+        assert!(part_1(&["))(".to_string()]) == Ok("-1".to_string()));
 
-        assert!(part_1(&vec![")))".to_string()]) == Ok("-3".to_string()));
-        assert!(part_1(&vec![")())())".to_string()]) == Ok("-3".to_string()));
+        assert!(part_1(&[")))".to_string()]) == Ok("-3".to_string()));
+        assert!(part_1(&[")())())".to_string()]) == Ok("-3".to_string()));
     }
 
     #[test]
@@ -77,9 +77,9 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert!(part_2(&vec![")".to_string()]) == Ok("1".to_string()));
+        assert!(part_2(&[")".to_string()]) == Ok("1".to_string()));
 
-        assert!(part_2(&vec!["()())".to_string()]) == Ok("5".to_string()));
+        assert!(part_2(&["()())".to_string()]) == Ok("5".to_string()));
     }
 
     #[test]

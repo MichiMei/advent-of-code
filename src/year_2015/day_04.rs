@@ -1,26 +1,26 @@
 use crate::errors::AoCError;
 use crate::md5_collision::find_hash_collision_parallel;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
         return Err(AoCError::UnexpectedInputLength(
             format!("Expected 1 line, found {} lines", input.len()))
         )
     }
     let input = input.first().unwrap();
-    find_hash_collision_parallel(&input, 0, 5)?
+    find_hash_collision_parallel(input, 0, 5)?
         .ok_or(AoCError::NoSolutionFoundError(String::new()))
         .map(|t| t.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
         return Err(AoCError::UnexpectedInputLength(
             format!("Expected 1 line, found {} lines", input.len()))
         )
     }
     let input = input.first().unwrap();
-    find_hash_collision_parallel(&input, 0, 6)?
+    find_hash_collision_parallel(input, 0, 6)?
         .ok_or(AoCError::NoSolutionFoundError(String::new()))
         .map(|t| t.to_string())
 }
@@ -32,8 +32,8 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["abcdef".to_string()]), Ok("609043".to_string()));
-        assert_eq!(part_1(&vec!["pqrstuv".to_string()]), Ok("1048970".to_string()));
+        assert_eq!(part_1(&["abcdef".to_string()]), Ok("609043".to_string()));
+        assert_eq!(part_1(&["pqrstuv".to_string()]), Ok("1048970".to_string()));
     }
 
     #[test]
