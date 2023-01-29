@@ -1,4 +1,6 @@
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut count = 0;
     for line in input {
         if is_nice_part_1(line) {
@@ -8,7 +10,7 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut count = 0;
     for line in input {
         if is_nice_part_2(line) {

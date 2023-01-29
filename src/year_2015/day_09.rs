@@ -1,24 +1,34 @@
 use std::collections::{HashMap, HashSet};
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let distances = parse_input(input)?;
     let remaining: HashSet<usize> = (0..distances.len()).collect();
 
-    let res = find_shortest_path_rec(&distances, &remaining, 0, None, None);
+    let res =
+        find_shortest_path_rec(&distances, &remaining, 0, None, None);
 
-    res.ok_or(ERR_NO_PATH_FOUND).map(|t| t.to_string())
+    res.ok_or_else(|| {
+        AoCError::NoSolutionFoundError(
+            "Could not calculate a path visiting all locations".to_string()
+        )
+    }).map(|t| t.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let distances = parse_input(input)?;
     let remaining: HashSet<usize> = (0..distances.len()).collect();
 
     let res = find_longest_path_rec(&distances, &remaining, 0, None);
 
-    res.ok_or(ERR_NO_PATH_FOUND).map(|t| t.to_string())
+    res.ok_or_else(|| {
+        AoCError::NoSolutionFoundError(
+            "Could not calculate a path visiting all locations".to_string()
+        )
+    }).map(|t| t.to_string())
 }
 
-fn parse_input(input: &[String]) -> Result<Vec<Vec<u16>>, &str> {
+fn parse_input(input: &[String]) -> Result<Vec<Vec<u16>>, AoCError<String>> {
     let mut tmp = vec![];
     for line in input {
         tmp.push(parse_line(line)?);
@@ -48,14 +58,19 @@ fn parse_input(input: &[String]) -> Result<Vec<Vec<u16>>, &str> {
     Ok(res)
 }
 
-fn parse_line(str: &str) -> Result<(String, String, u16), &str> {
+fn parse_line(str: &str) -> Result<(String, String, u16), AoCError<String>> {
     let words: Vec<&str> = str.split(' ').collect();
     if words.len() != 5 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Unexpected input line. Expected '<source> TO <destination> = <distance>'\n\
+            Found: '{}'", str)
+        ))
     }
     let s = words[0].to_string();
     let d = words[2].to_string();
-    let v = words[4].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let v = words[4].parse().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse distance. Expected a positive number, found {}.\n{}", words[4], e)
+    ))?;
 
     Ok((s, d, v))
 }
@@ -84,8 +99,8 @@ fn find_shortest_path_rec(distances: &Vec<Vec<u16>>, remaining: &HashSet<usize>,
             length
         };
 
-        let res = find_shortest_path_rec(distances, &remaining_new, length_new,
-                                         Some(*elem), new_shortest);
+        let res = find_shortest_path_rec(distances, &remaining_new,
+                                         length_new,Some(*elem), new_shortest);
         if res.is_some() && (new_shortest.is_none() || new_shortest.unwrap() > res.unwrap()) {
             new_shortest = res;
         }
@@ -115,8 +130,8 @@ fn find_longest_path_rec(distances: &Vec<Vec<u16>>, remaining: &HashSet<usize>, 
         } else {
             length
         };
-        let res = find_longest_path_rec(distances, &remaining_new, length_new,
-                                         Some(*elem));
+        let res = find_longest_path_rec(distances, &remaining_new,
+                                        length_new,Some(*elem));
         if res.is_some() && (longest.is_none() || longest.unwrap() < res.unwrap()) {
             longest = res;
         }
@@ -125,9 +140,6 @@ fn find_longest_path_rec(distances: &Vec<Vec<u16>>, remaining: &HashSet<usize>, 
 
     longest
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_NO_PATH_FOUND: &str = "Could not calculate a path";
 
 #[cfg(test)]
 mod test {

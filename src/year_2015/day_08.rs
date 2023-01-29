@@ -1,6 +1,7 @@
 use std::iter::Peekable;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut sum = 0;
 
     for line in input {
@@ -11,7 +12,7 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(sum.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut sum = 0;
 
     for line in input {
@@ -22,31 +23,39 @@ pub fn part_2(input: &[String]) -> Result<String, &str> {
     Ok(sum.to_string())
 }
 
-fn remove_escape_characters(str: &str) -> Result<String, &str> {
+fn remove_escape_characters(str: &str) -> Result<String, AoCError<String>> {
     if !str.is_ascii() {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Only ascii strings supported, found '{}'", str)
+        ))
     }
     let mut res = vec![];
     let mut bytes = str.bytes().peekable();
 
     if let Some(c) = bytes.next() {
-        if c != 34 {
-            return Err(ERR_INPUT_MALFORMED)
+        if c != b'\"' {
+            return Err(AoCError::BadInputFormat(
+                format!("Inputs have to start with '\"'. Found '{}'", str)
+            ))
         }
     } else {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Inputs have to start with '\"'. Found '{}'", str)
+        ))
     }
 
     while let Some(byte) = bytes.next() {
         if bytes.peek().is_none() {
-            if byte != 34 {
-                return Err(ERR_INPUT_MALFORMED)
+            if byte != b'\"' {
+                return Err(AoCError::BadInputFormat(
+                    format!("Inputs have to end with '\"'. Found '{}'", str)
+                ))
             }
             continue
         }
 
         match byte {
-            92 => {
+            b'\\' => {
                 res.push(parse_escape(&mut bytes)?)
             },
             _ => res.push(byte as char),
@@ -55,20 +64,31 @@ fn remove_escape_characters(str: &str) -> Result<String, &str> {
     Ok(res.into_iter().collect())
 }
 
-fn parse_escape(bytes: &mut Peekable<core::str::Bytes>) -> Result<char, &'static str> {
+fn parse_escape(bytes: &mut Peekable<core::str::Bytes>) -> Result<char, AoCError<String>> {
     match bytes.next() {
-        Some(92) => Ok(92 as char),
-        Some(34) => Ok(34 as char),
-        Some(120) => {
+        Some(b'\\') => Ok('\\'),
+        Some(b'\"') => Ok('\"'),
+        Some(b'x') => {
             // read 2 char -> string -> u8 (hexadecimal) -> return
             let char_hex = [
-                bytes.next().ok_or(ERR_INPUT_MALFORMED)?,
-                bytes.next().ok_or(ERR_INPUT_MALFORMED)?
+                bytes.next().ok_or_else(|| AoCError::BadInputFormat(
+                    "At least two characters need to follow after '\\x'".to_string()
+                ))?,
+                bytes.next().ok_or_else(|| AoCError::BadInputFormat(
+                    "At least two characters need to follow after '\\x'".to_string()
+                ))?
             ];
-            let int = u8::from_str_radix(&String::from_utf8_lossy(&char_hex), 16).map_err(|_| ERR_INPUT_MALFORMED)?;
+            let int = u8::from_str_radix(&String::from_utf8_lossy(&char_hex), 16)
+                .map_err(|e| AoCError::BadInputFormat(
+                    format!("Could not parse byte following '\\x'. Found {:?}.\n{}", char_hex, e)
+                ))?;
             Ok(int as char)
         }
-        _ => Err(ERR_INPUT_MALFORMED),
+        _ => {
+            Err(AoCError::BadInputFormat(
+                "Unexpected character after '\\'. Only '\\', '\"' and 'x' supported".to_string()
+            ))
+        },
     }
 }
 
@@ -91,8 +111,6 @@ fn encode(str: &str) -> String {
     res.push('"');
     res.into_iter().collect()
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {

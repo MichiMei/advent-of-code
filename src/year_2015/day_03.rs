@@ -1,8 +1,11 @@
 use std::collections::HashSet;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Expected 1 line, found {} lines", input.len())
+        ))
     }
     let mut point = (0, 0);
     let mut visited = HashSet::new();
@@ -16,9 +19,11 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(visited.len().to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Expected 1 line, found {} lines", input.len())
+        ))
     }
     let mut santa = (0, 0);
     let mut roboter_santa = (0, 0);
@@ -37,37 +42,23 @@ pub fn part_2(input: &[String]) -> Result<String, &str> {
             break;
         }
     }
-    /*
-    loop {
-        if let Some(c) = iter.next() {
-            santa = move_point(c, santa)?;
-            visited.insert(santa);
-        } else {
-            break;
-        }
-        if let Some(c) = iter.next() {
-            roboter_santa = move_point(c, roboter_santa)?;
-            visited.insert(roboter_santa);
-        } else {
-            break;
-        }
-    }*/
     Ok(visited.len().to_string())
 }
 
-fn move_point(dir: char, point: (i32, i32)) -> Result<(i32, i32), &'static str> {
+fn move_point(dir: char, point: (i32, i32)) -> Result<(i32, i32), AoCError<String>> {
     Ok(match dir {
         '^' => (point.0+1, point.1),
         '>' => (point.0, point.1+1),
         'v' => (point.0-1, point.1),
         '<' => (point.0, point.1-1),
-        _ => return Err(ERR_CHAR_UNSUPPORTED),
+        c => {
+            return Err(AoCError::BadInputFormat(
+                format!("Unsupported character '{}' found. Only '^', '>', 'v' and '<' allowed.", c)
+
+            ))
+        }
     })
 }
-
-const ERR_VEC_LENGTH: &str = "The input is expected to be exactly one line";
-const ERR_CHAR_UNSUPPORTED: &str = "Unexpected character in input, \
-        only '^', '>', 'v' and '<' allowed";
 
 #[cfg(test)]
 mod test {

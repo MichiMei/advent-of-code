@@ -1,6 +1,6 @@
+use crate::errors::AoCError;
 
-
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let line = vec![false; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
@@ -25,7 +25,7 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let line = vec![0u8; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
@@ -51,16 +51,24 @@ pub fn part_2(input: &[String]) -> Result<String, &str> {
 
 type Command = (Mode, (usize, usize), (usize, usize));
 
-fn parse_line(str: &str) -> Result<Command, &str> {
+fn parse_line(str: &str) -> Result<Command, AoCError<String>> {
     if str.starts_with("turn") {
         let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 5 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Bad 'turn' instruction. Expected: 'turn [on/off] <p0> through <p1>'.\n\
+                found: {}", str)
+            ))
         }
         let mode = match words[1] {
             "on" => Mode::Turn(true),
             "off" => Mode::Turn(false),
-            _ => return Err(ERR_INPUT_MALFORMED)
+            _ => {
+                return Err(AoCError::BadInputFormat(
+                    format!("Bad 'turn' instruction. Expected: 'turn [on/off] <p0> through <p1>'.\n\
+                        found: {}", str)
+                ));
+            }
         };
         let c0 = parse_corner(words[2])?;
         let c1 = parse_corner(words[4])?;
@@ -68,24 +76,38 @@ fn parse_line(str: &str) -> Result<Command, &str> {
     } else if str.starts_with("toggle") {
         let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 4 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Bad 'toggle' instruction. Expected: 'toggle <p0> through <p1>'.\n\
+                    found: {}", str)
+            ))
         }
         let mode = Mode::Toggle;
         let c0 = parse_corner(words[1])?;
         let c1 = parse_corner(words[3])?;
         Ok((mode, c0, c1))
     } else {
-        Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Bad instruction. Expected: \n
+                \t'toggle <p0> through <p1>'.\n\
+                \t'turn [on/off] <p0> through <p1>'
+                found: {}", str)
+        ))
     }
 }
 
-fn parse_corner(str: &str) -> Result<(usize, usize), &'static str> {
+fn parse_corner(str: &str) -> Result<(usize, usize), AoCError<String>> {
     let words: Vec<&str> = str.split(',').collect();
     if words.len() != 2 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Could not parse point, expected 'x,y', found '{}'", str)
+        ))
     }
-    let val0 = words[0].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-    let val1 = words[1].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let val0 = words[0].parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Could not parse number. Only positive numbers allowed, found {}", words[0])
+    ))?;
+    let val1 = words[1].parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Could not parse number. Only positive numbers allowed, found {}", words[1])
+    ))?;
     Ok((val0, val1))
 }
 
@@ -93,8 +115,6 @@ enum Mode {
     Turn(bool),
     Toggle,
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input is malformed";
 
 #[cfg(test)]
 mod test {

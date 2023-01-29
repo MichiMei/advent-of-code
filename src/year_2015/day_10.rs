@@ -1,8 +1,14 @@
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Input is expected to be exactly 1 line, found {}", input.len())
+        ))
     }
-    let int = input.first().unwrap().parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let int = input.first().unwrap().parse().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse input, expected a positive number, found {}\n{}", input[0], e)
+    ))?;
     let mut start = LASSequence::from(int);
 
     for _ in 0..40 {
@@ -12,11 +18,15 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(start.len().to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Input is expected to be exactly 1 line, found {}", input.len())
+        ))
     }
-    let int = input.first().unwrap().parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let int = input.first().unwrap().parse().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse input, expected a positive number, found {}\n{}", input[0], e)
+    ))?;
     let mut start = LASSequence::from(int);
 
     for _ in 0..50 {
@@ -81,9 +91,6 @@ impl LASSequence {
         self.sequence.push(digit);
     }
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed, expected a integer";
-const ERR_VEC_LENGTH: &str = "The input is expected to be exactly one line";
 
 #[cfg(test)]
 mod test {
