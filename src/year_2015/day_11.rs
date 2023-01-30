@@ -1,17 +1,22 @@
 use std::fmt::{Display, Formatter};
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("The input is expected to be exactly one line, found {} lines", input.len())
+        ))
     }
     let mut password = Password::from(input.first().unwrap());
     password.next();
     Ok(password.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("The input is expected to be exactly one line, found {} lines", input.len())
+        ))
     }
     let mut password = Password::from(input.first().unwrap());
     password.next();
@@ -113,8 +118,6 @@ impl Display for Password {
         write!(f, "{}", self.chars.iter().collect::<String>())
     }
 }
-
-const ERR_VEC_LENGTH: &str = "The input is expected to be exactly one line";
 
 #[cfg(test)]
 mod test {

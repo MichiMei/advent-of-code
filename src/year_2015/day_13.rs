@@ -1,24 +1,28 @@
 use std::cmp::max;
 use std::collections::{HashMap, HashSet};
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let matrix = parse_happiness_matrix(input)?;
     let table = Table::new(matrix.len());
     let res = find_optimal_sitting(&matrix, &table, false);
     Ok(res.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let matrix = parse_happiness_matrix(input)?;
     let table = Table::new(matrix.len());
     let res = find_optimal_sitting(&matrix, &table, true);
     Ok(res.to_string())
 }
 
-fn parse_happiness_matrix(input: &[String]) -> Result<Vec<Vec<i32>>, &str> {
+fn parse_happiness_matrix(input: &[String]) -> Result<Vec<Vec<i32>>, AoCError<String>> {
     let mut index = HashMap::new();
     for line in input.iter() {
-        let name = line.split(' ').next().ok_or(ERR_INPUT_MALFORMED)?;
+        let name = line.split(' ').next().ok_or_else(|| AoCError::BadInputFormat(
+            format!("Input contains malformed line.\nExpected: '<name0> would [gain/loose] <value> \
+                happiness units by sitting next to <name1>.'\nFound: '{}'", line)
+        ))?;
         if !index.contains_key(name) {
             let i = index.len();
             index.insert(name, i);
@@ -29,7 +33,10 @@ fn parse_happiness_matrix(input: &[String]) -> Result<Vec<Vec<i32>>, &str> {
     for line in input {
         let words: Vec<&str> = line.split(' ').collect();
         if words.len() != 11 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Input contains malformed line.\nExpected: '<name0> would [gain/loose] \
+                <value> happiness units by sitting next to <name1>.'\nFound: '{}'", line)
+            ))
         }
         let src = &words[0];
         let dest = &words[10];
@@ -37,15 +44,29 @@ fn parse_happiness_matrix(input: &[String]) -> Result<Vec<Vec<i32>>, &str> {
         let negative = match words[2] {
             "gain" => false,
             "lose" => true,
-            _ => return Err(ERR_INPUT_MALFORMED),
+            _ => {
+                return Err(AoCError::BadInputFormat(
+                    format!("Input contains malformed line.\nExpected: '<name0> would [gain/loose] \
+                    <value> happiness units by sitting next to <name1>.'\nFound: '{}'", line)
+                ))
+            }
         };
-        let mut val = words[3].parse::<i32>().map_err(|_| ERR_INPUT_MALFORMED)?;
+        let mut val = words[3].parse::<i32>().map_err(|_| AoCError::BadInputFormat(
+            format!("Input contains malformed line.\nExpected: '<name0> would [gain/loose] \
+                    <value> happiness units by sitting next to <name1>.'\nFound: '{}'", line)
+        ))?;
         if negative {
             val = -val;
         }
 
-        let x = index.get(src).ok_or(ERR_INPUT_MALFORMED)?;
-        let y = index.get(dest).ok_or(ERR_INPUT_MALFORMED)?;
+        let x = index.get(src).ok_or_else(|| AoCError::BadInputFormat(
+            format!("Input contains malformed line.\nExpected: '<name0> would [gain/loose] \
+                    <value> happiness units by sitting next to <name1>.'\nFound: '{}'", line)
+        ))?;
+        let y = index.get(dest).ok_or_else(|| AoCError::BadInputFormat(
+            format!("Input contains malformed line.\nExpected: '<name0> would [gain/loose] \
+                    <value> happiness units by sitting next to <name1>.'\nFound: '{}'", line)
+        ))?;
 
         matrix[*x][*y] = val;
     }
@@ -96,8 +117,6 @@ impl Table {
         Self{remaining, order, happiness: 0}
     }
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {

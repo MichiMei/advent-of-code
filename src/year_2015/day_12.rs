@@ -2,10 +2,13 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::iter::Peekable;
 use std::str::Chars;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("The input is expected to be exactly one line, found {} lines", input.len())
+        ))
     }
     let json = input.first().unwrap();
     let mut chars = json.chars();
@@ -17,9 +20,11 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(sum.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("The input is expected to be exactly one line, found {} lines", input.len())
+        ))
     }
     let line = input.first().unwrap();
     let json = JsonValue::parse(line)?;
@@ -27,7 +32,7 @@ pub fn part_2(input: &[String]) -> Result<String, &str> {
     Ok(sum.to_string())
 }
 
-fn get_next_int(chars: &mut Chars) -> Result<Option<i32>, &'static str> {
+fn get_next_int(chars: &mut Chars) -> Result<Option<i32>, AoCError<String>> {
     let first = loop {
         let next = chars.next();
         if next.is_none() {
@@ -47,7 +52,9 @@ fn get_next_int(chars: &mut Chars) -> Result<Option<i32>, &'static str> {
         number_vec.push(next)
     }
 
-    Ok(Some(number_vec.into_iter().collect::<String>().parse().map_err(|_| ERR_INPUT_MALFORMED)?))
+    Ok(Some(number_vec.into_iter().collect::<String>().parse().map_err(|e| AoCError::BadInputFormat(
+        format!("Parsing number failed.\n{}", e)
+    ))?))
 }
 
 enum JsonValue {
@@ -58,12 +65,14 @@ enum JsonValue {
 }
 
 impl JsonValue {
-    fn parse(str: &str) -> Result<JsonValue, &str> {
+    fn parse(str: &str) -> Result<JsonValue, AoCError<String>> {
         Self::parse_chars(&mut str.chars().peekable())
     }
 
-    fn parse_chars(chars: &mut Peekable<Chars>) -> Result<JsonValue, &'static str> {
-        let json_value = match chars.peek().ok_or(ERR_JSON_EMPTY)? {
+    fn parse_chars(chars: &mut Peekable<Chars>) -> Result<JsonValue, AoCError<String>> {
+        let json_value = match chars.peek().ok_or_else(|| AoCError::BadInputFormat(
+            "Input cannot be empty. Minimal input is '{}'".to_string()
+        ))? {
             '{' => {
                 chars.next();
                 let mut content = HashMap::new();
@@ -76,14 +85,18 @@ impl JsonValue {
                         Some('}') => {
                             chars.next();
                             if !end_expected {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    "Unexpected '}'".to_string()
+                                ))
                             }
                             break
                         }
                         Some(',') => {
                             chars.next();
                             if !comma_expected {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    "Unexpected ','".to_string()
+                                ))
                             }
                             value_expected = true;
                             comma_expected = false;
@@ -91,16 +104,26 @@ impl JsonValue {
                         }
                         Some(_) => {
                             if !value_expected {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    "Unexpected value".to_string()
+                                ))
                             }
                             let key = match Self::parse_chars(chars)? {
                                 JsonValue::String(str) => str,
-                                _ => return Err(ERR_JSON_MALFORMED),
+                                x => {
+                                    return Err(AoCError::BadInputFormat(
+                                        format!("Expected a String literal, found {}", x)
+                                    ))
+                                },
                             };
                             trim(chars);
-                            let x = chars.next().ok_or(ERR_JSON_MALFORMED)?;
+                            let x = chars.next().ok_or_else(|| AoCError::BadInputFormat(
+                                "Unexpected end, expected ':'".to_string()
+                            ))?;
                             if x != ':' {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    format!("Expected ':', found {}", x)
+                                ))
                             }
                             trim(chars);
                             let val = Self::parse_chars(chars)?;
@@ -109,7 +132,11 @@ impl JsonValue {
                             comma_expected = true;
                             end_expected = true;
                         }
-                        None => return Err(ERR_JSON_MALFORMED),
+                        None => {
+                            return Err(AoCError::BadInputFormat(
+                                "Unexpected end".to_string()
+                            ))
+                        },
                     }
                 };
                 Self::Object(content)
@@ -126,14 +153,18 @@ impl JsonValue {
                         Some(']') => {
                             chars.next();
                             if !end_expected {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    "Unexpected ']'".to_string()
+                                ))
                             }
                             break
                         }
                         Some(',') => {
                             chars.next();
                             if !comma_expected {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    "Unexpected ','".to_string()
+                                ))
                             }
                             value_expected = true;
                             comma_expected = false;
@@ -141,14 +172,20 @@ impl JsonValue {
                         }
                         Some(_) => {
                             if !value_expected {
-                                return Err(ERR_JSON_MALFORMED)
+                                return Err(AoCError::BadInputFormat(
+                                    "Unexpected value".to_string()
+                                ))
                             }
                             content.push(Self::parse_chars(chars)?);
                             value_expected = false;
                             comma_expected = true;
                             end_expected = true;
                         },
-                        None => return Err(ERR_JSON_MALFORMED),
+                        None => {
+                            return Err(AoCError::BadInputFormat(
+                                "Unexpected end".to_string()
+                            ))
+                        }
                     }
                 };
                 Self::Array(content)
@@ -240,7 +277,7 @@ impl Display for JsonValue {
     }
 }
 
-fn read_int(chars: &mut Peekable<Chars>) -> Result<i32, &'static str> {
+fn read_int(chars: &mut Peekable<Chars>) -> Result<i32, AoCError<String>> {
     let mut tmp = vec![];
     while let Some(val) = chars.peek() {
         match val {
@@ -248,10 +285,12 @@ fn read_int(chars: &mut Peekable<Chars>) -> Result<i32, &'static str> {
             _ => tmp.push(chars.next().unwrap()),
         }
     }
-    tmp.into_iter().collect::<String>().parse().map_err(|_| ERR_EXPECTED_INT)
+    tmp.into_iter().collect::<String>().parse().map_err(|e| AoCError::BadInputFormat(
+        format!("Parsing number failed.\n{}", e)
+    ))
 }
 
-fn read_string(chars: &mut Peekable<Chars>) -> Result<String, &'static str> {
+fn read_string(chars: &mut Peekable<Chars>) -> Result<String, AoCError<String>> {
     let mut tmp = vec![];
     for val in chars.by_ref() {
         match val {
@@ -259,7 +298,9 @@ fn read_string(chars: &mut Peekable<Chars>) -> Result<String, &'static str> {
             _ => tmp.push(val),
         }
     }
-    Err(ERR_STRING_MALFORMED)
+    Err(AoCError::BadInputFormat(
+        "Unexpected end".to_string()
+    ))
 }
 
 fn trim(chars: &mut Peekable<Chars>) {
@@ -270,13 +311,6 @@ fn trim(chars: &mut Peekable<Chars>) {
         chars.next();
     }
 }
-
-const ERR_VEC_LENGTH: &str = "The input is expected to be exactly one line";
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_JSON_EMPTY: &str = "Json is empty";
-const ERR_EXPECTED_INT: &str = "Json malformed, parsing int failed";
-const ERR_STRING_MALFORMED: &str = "Json malformed, string termination missing";
-const ERR_JSON_MALFORMED: &str = "Json malformed";
 
 #[cfg(test)]
 mod test {
@@ -307,8 +341,10 @@ mod test {
     #[test]
     fn check_examples_part_2() {
         assert_eq!(part_2(&["[1,2,3]".to_string()]), Ok("6".to_string()));
-        assert_eq!(part_2(&["[1,{\"c\":\"red\",\"b\":2},3]".to_string()]), Ok("4".to_string()));
-        assert_eq!(part_2(&["{\"d\":\"red\",\"e\":[1,2,3,4],\"f\":5}".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_2(&["[1,{\"c\":\"red\",\"b\":2},3]".to_string()]),
+                   Ok("4".to_string()));
+        assert_eq!(part_2(&["{\"d\":\"red\",\"e\":[1,2,3,4],\"f\":5}".to_string()]),
+                   Ok("0".to_string()));
         assert_eq!(part_2(&["[1,\"red\",5]".to_string()]), Ok("6".to_string()));
     }
 
