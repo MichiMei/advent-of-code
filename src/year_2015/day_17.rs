@@ -1,25 +1,30 @@
 use std::cmp::Ordering;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let containers = parse_containers(input)?;
     let mut filled = vec![false; containers.len()];
     let count = calc_possibilities(&containers, &mut filled, 0, 0, 150);
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let containers = parse_containers(input)?;
     let mut filled = vec![false; containers.len()];
     let (count, _) =
         calc_minimal_possibilities(&containers, &mut filled, 0, 0, 150)
-            .ok_or(ERR_NO_POSSIBILITY)?;
+            .ok_or_else(|| AoCError::NoSolutionFoundError(
+                "No possible distribution found".to_string()
+            ))?;
     Ok(count.to_string())
 }
 
-fn parse_containers(input: &[String]) -> Result<Vec<u16>, &'static str> {
+fn parse_containers(input: &[String]) -> Result<Vec<u16>, AoCError<String>> {
     let mut res = vec![];
     for line in input {
-        res.push(line.parse().map_err(|_| ERR_INPUT_MALFORMED)?);
+        res.push(line.parse().map_err(|e| AoCError::BadInputFormat(
+            format!("Parsing number failed, found '{}'.\n{}", line, e)
+        ))?);
     }
     Ok(res)
 }
@@ -76,16 +81,13 @@ fn calc_minimal_possibilities(containers: &Vec<u16>, filled: &mut Vec<bool>, cur
     }
 }
 
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_NO_POSSIBILITY: &str = "No possible distribution found";
-
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
     use super::*;
 
     #[test]
-    fn check_examples_part_1() -> Result<(), &'static str> {
+    fn check_examples_part_1() -> Result<(), AoCError<String>> {
         let v = vec![
             "20".to_string(),
             "15".to_string(),
@@ -110,7 +112,7 @@ mod test {
     }
 
     #[test]
-    fn check_examples_part_2() -> Result<(), &'static str> {
+    fn check_examples_part_2() -> Result<(), AoCError<String>> {
         let v = vec![
             "20".to_string(),
             "15".to_string(),
@@ -122,7 +124,9 @@ mod test {
         let mut filled = vec![false; containers.len()];
         let (count, _) =
             calc_minimal_possibilities(&containers, &mut filled, 0, 0, 25)
-                .ok_or(ERR_NO_POSSIBILITY)?;
+                .ok_or_else(|| AoCError::NoSolutionFoundError(
+                    "No possible distribution found".to_string()
+                ))?;
         assert_eq!(count, 3);
         Ok(())
     }
