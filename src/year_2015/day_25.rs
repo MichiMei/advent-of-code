@@ -1,6 +1,9 @@
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Expected a single line, found {} lines.", input.len())))
     }
     let index = parse_input(&input[0])?;
 
@@ -9,20 +12,22 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(res.to_string())
 }
 
-pub fn part_2(_: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(_: &Vec<String>) -> Result<String, AoCError<String>> {
     Ok("Merry Christmas!".to_string())
 }
 
-fn parse_input(line: &str) -> Result<(usize, usize), &str> {
+fn parse_input(line: &str) -> Result<(usize, usize), AoCError<String>> {
     let words: Vec<&str> = line.split(' ').collect();
-    assert_eq!(words.len(), 19);
+    if words.len() < 19 {
+        return Err(AoCError::BadInputFormat(String::new()))?;
+    }
     let mut row_str = words[16];
     row_str = &row_str[..row_str.len()-1];
     let mut col_str = words[18];
     col_str = &col_str[..col_str.len()-1];
 
-    let row = row_str.parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-    let col = col_str.parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let row = row_str.parse().map_err(|_| AoCError::BadInputFormat("Parsing the input line failed".to_string()))?;
+    let col = col_str.parse().map_err(|_| AoCError::BadInputFormat("Parsing the input line failed".to_string()))?;
 
     Ok((row, col))
 }
@@ -51,8 +56,6 @@ fn next_index((row, col): (usize, usize)) -> (usize, usize) {
     }
     (row-1, col+1)
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {
