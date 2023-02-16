@@ -1,20 +1,27 @@
 use std::cmp::{max, min};
+use crate::errors::AoCError;
 use crate::year_2015::lib_2015::{Character, Item};
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
-    let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
+    let boss = Character::from_input(input)
+        .ok_or_else(|| AoCError::BadInputFormat("Parsing boss failed.".to_string()))?;
     let player = Character::new(100, 0, 0);
 
-    let cost = try_all_items(player, boss, minimum, true).ok_or(ERR_NO_POSSIBILITY_FOUND)?;
+    let cost = try_all_items(player, boss, minimum, true)
+        .ok_or_else(|| AoCError::NoSolutionFoundError(
+            "No solution to beat the boss was found".to_string()))?;
 
     Ok(cost.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
-    let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
+    let boss = Character::from_input(input)
+        .ok_or_else(|| AoCError::BadInputFormat("Parsing boss failed.".to_string()))?;
     let player = Character::new(100, 0, 0);
 
-    let cost = try_all_items(player, boss, maximum, false).ok_or(ERR_NO_POSSIBILITY_FOUND)?;
+    let cost = try_all_items(player, boss, maximum, false)
+        .ok_or_else(|| AoCError::NoSolutionFoundError(
+            "No solution to beat the boss was found".to_string()))?;
 
     Ok(cost.to_string())
 }
@@ -44,20 +51,20 @@ fn maximum(f: Option<usize>, s: Option<usize>) -> Option<usize> {
 fn try_all_items(player: Character, boss: Character, compare: Comparator, player_wins: bool) -> Option<usize> {
     let mut min_cost = None;
     for weapon in WEAPONS {
-        let mut new_player = player.clone();
+        let mut new_player = player;
         new_player.add_item(&weapon);
-        let res = try_all_armors(new_player, boss.clone(), weapon.cost, compare, player_wins);
+        let res = try_all_armors(new_player, boss, weapon.cost, compare, player_wins);
         min_cost = compare(min_cost, res);
     }
     min_cost
 }
 
 fn try_all_armors(player: Character, boss: Character, cost: usize, compare: Comparator, player_wins: bool) -> Option<usize> {
-    let mut min_cost = try_all_rings(player.clone(), boss.clone(), cost, compare, player_wins);
+    let mut min_cost = try_all_rings(player, boss, cost, compare, player_wins);
     for armor in ARMORS {
-        let mut new_player = player.clone();
+        let mut new_player = player;
         new_player.add_item(&armor);
-        let res = try_all_rings(new_player, boss.clone(), cost+armor.cost, compare, player_wins);
+        let res = try_all_rings(new_player, boss, cost+armor.cost, compare, player_wins);
         min_cost = compare(min_cost, res);
     }
     min_cost
@@ -65,27 +72,23 @@ fn try_all_armors(player: Character, boss: Character, cost: usize, compare: Comp
 
 fn try_all_rings(player: Character, boss: Character, cost: usize, compare: Comparator, player_wins: bool) -> Option<usize> {
     // try no ring
-    let mut min_cost = if fight(player.clone(), boss.clone(), ) == player_wins {
+    let mut min_cost = if fight(player, boss, ) == player_wins {
         Some(cost)
     } else {
         None
     };
-    for left_index in 0..RINGS.len() {
-        let left_ring = &RINGS[left_index];
-
+    for (left_index, left_ring) in RINGS.iter().enumerate() {
         // try 1 ring
-        let mut new_player = player.clone();
+        let mut new_player = player;
         new_player.add_item(left_ring);
         let new_cost = cost+left_ring.cost;
         if fight(new_player, boss) == player_wins {
             min_cost = compare(min_cost, Some(new_cost));
         }
 
-        for right_index in left_index+1..RINGS.len() {
-            let right_ring = &RINGS[right_index];
-
+        for right_ring in RINGS[left_index+1..].iter() {
             // try 2 rings
-            let mut new_player = new_player.clone();
+            let mut new_player = new_player;
             new_player.add_item(right_ring);
             let new_cost = new_cost+right_ring.cost;
             if fight(new_player, boss) == player_wins {
@@ -131,9 +134,6 @@ const RINGS: [Item; 6] = [
     Item{cost: 40, damage: 0, armor: 2},
     Item{cost: 80, damage: 0, armor: 3},
 ];
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_NO_POSSIBILITY_FOUND: &str = "No possible solution was found";
 
 #[cfg(test)]
 mod test {
