@@ -1,23 +1,33 @@
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::UnexpectedInputLength(format!(
+            "Input is expected to be exactly one line. Found: {}", input.len()
+        )))
     }
-    let target = input[0].parse::<usize>().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let target = input[0].parse::<usize>().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse the input number. Found: {}\n{}", input[0], e)))?;
 
     let vec = calculate_array(target/10);
-    let index = find_first_bigger(&vec, target/10).ok_or(ERR_INPUT_MALFORMED)?;
+    let index = find_first_bigger(&vec, target/10).ok_or_else(
+        || AoCError::NoSolutionFoundError(String::new()))?;
 
     Ok(index.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::UnexpectedInputLength(format!(
+            "Input is expected to be exactly one line. Found: {}", input.len()
+        )))
     }
-    let target = input[0].parse::<usize>().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let target = input[0].parse::<usize>().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse the input number. Found: {}\n{}", input[0], e)))?;
 
     let vec = calculate_array_50(target/11+1);
-    let index = find_first_bigger_with_factor(&vec, target, 11).ok_or(ERR_INPUT_MALFORMED)?;
+    let index = find_first_bigger_with_factor(&vec, target, 11).ok_or_else(
+        || AoCError::NoSolutionFoundError(String::new()))?;
 
     Ok(index.to_string())
 }
@@ -65,8 +75,6 @@ fn find_first_bigger_with_factor(vec: &[usize], target: usize, factor: usize) ->
     }
     None
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {
