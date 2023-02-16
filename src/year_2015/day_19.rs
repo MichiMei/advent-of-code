@@ -2,10 +2,12 @@ use std::collections::{HashMap, HashSet};
 use std::iter::Peekable;
 use std::ops::{Add, Sub};
 use std::str::Chars;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() < 3 || !input[input.len()-2].is_empty() {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::UnexpectedInputLength("The input has to be at least 3 lines long and \
+            the penultimate line needs to be empty.".to_string()))
     }
     let replacements = parse_replacements(&input[0..input.len()-2])?;
     let start_str = &input[input.len()-1];
@@ -18,19 +20,22 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(result_str.len().to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let elems = Elements::from(&input[0..input.len()-2])?;
     let rules = parse_rules(&input[0..input.len()-2], &elems)?;
     let goal = Molecule::from_string(&input[input.len()-1], &elems)?;
     let start = Molecule::from_string("e", &elems)?;
 
     let rules_vec: Vec<Molecule> = rules.into_iter().collect();
-    let res = build_molecule_rule_wise(&start, &rules_vec, &goal, &elems, 0, goal.count(), "").ok_or(ERR_INPUT_MALFORMED)?;
+    let res = build_molecule_rule_wise(&start, &rules_vec, &goal, &elems,
+                                       0, goal.count(), "")
+        .ok_or_else(|| AoCError::BadInputFormat(
+            "The replacement rules could not be parsed".to_string()))?;
 
     Ok(res.to_string())
 }
 
-fn parse_replacements(input: &[String]) -> Result<Vec<Replacement>, &str> {
+fn parse_replacements(input: &[String]) -> Result<Vec<Replacement>, AoCError<String>> {
     let mut replacements = vec![];
     for line in input {
         replacements.push(Replacement::from(line)?);
@@ -59,24 +64,33 @@ struct Replacement {
 }
 
 impl Replacement {
-    fn from(str: &str) -> Result<Self, &str> {
+    fn from(str: &str) -> Result<Self, AoCError<String>> {
         let words: Vec<&str> = str.split(" => ").collect();
         if words.len() != 2 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(format!(
+                "Replacement line malformed. Expected '<pattern> => <replacement>.\nFound: '{}'",
+                str
+            )))
         }
         let pattern = words[0].to_string();
         let replacement = words[1].to_string();
         if pattern.is_empty() || replacement.is_empty() {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(format!(
+                "Replacement line malformed. Expected '<pattern> => <replacement>.\nFound: '{}'",
+                str
+            )))
         }
         Ok(Self{pattern, replacement})
     }
 }
 
-fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Molecule, elems: &Elements, r_count: usize, max: usize, dbg: &str) -> Option<usize> {
+fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Molecule,
+                            elems: &Elements, r_count: usize, max: usize, dbg: &str)
+        -> Option<usize> {
     if rules.is_empty() {
         return if molecule == goal {
-            let m_count = goal.count_intermediates(elems) - molecule.count_intermediates(elems);
+            let m_count =
+                goal.count_intermediates(elems) - molecule.count_intermediates(elems);
             Some(m_count + r_count)
         } else {
             None
@@ -84,14 +98,17 @@ fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Mole
     }
     let rule = &rules[0];
 
-    let mut min = build_molecule_rule_wise(molecule, &rules[1..], goal, elems, r_count, max, &format!("{} 0", dbg));
+    let mut min = build_molecule_rule_wise(molecule, &rules[1..], goal, elems,
+                                           r_count, max, &format!("{} 0", dbg));
     let mut new_molecule = molecule.clone();
     for c in 1..=max {
         new_molecule = &new_molecule + rule;
         if !new_molecule.is_valid(goal) {
             break;
         }
-        let tmp = build_molecule_rule_wise(&new_molecule, &rules[1..], goal, elems, r_count+c, max, &format!("{} {}", dbg, c));
+        let tmp = build_molecule_rule_wise(&new_molecule, &rules[1..], goal,
+                                           elems, r_count+c, max,
+                                           &format!("{} {}", dbg, c));
         if min.is_none() || (tmp.is_some() && min.unwrap() < tmp.unwrap()) {
             min = tmp;
         }
@@ -99,13 +116,10 @@ fn build_molecule_rule_wise(molecule: &Molecule, rules: &[Molecule], goal: &Mole
     min
 }
 
-fn parse_rules(input: &[String], elems: &Elements) -> Result<HashSet<Molecule>, &'static str> {
+fn parse_rules(input: &[String], elems: &Elements) -> Result<HashSet<Molecule>, AoCError<String>> {
     let mut rules = HashSet::new();
     for line in input.iter() {
         let tmp = Molecule::from_rule(line, elems)?;
-        /*if tmp.count_terminals(elems) == 0 {
-            continue
-        }*/
         rules.insert(tmp);
     }
     Ok(rules)
@@ -129,18 +143,26 @@ impl Elements {
         }
     }
 
-    fn from(input: &[String]) -> Result<Self, &'static str> {
+    fn from(input: &[String]) -> Result<Self, AoCError<String>> {
         let mut elems = Elements::new();
 
         for line in input.iter() {
             let words: Vec<&str> = line.split(" => ").collect();
             if words.len() != 2 {
-                return Err(ERR_INPUT_MALFORMED)
+                return Err(AoCError::BadInputFormat(format!(
+                    "Replacement line malformed. Expected '<pattern> => <replacement>.\
+                    \nFound: '{}'", line
+                )))
             }
             let mut chars = words[0].chars().peekable();
-            let tmp = parse_elem(&mut chars).ok_or(ERR_INPUT_MALFORMED)?;
+            let tmp = parse_elem(&mut chars)
+                .ok_or_else(|| AoCError::BadInputFormat(
+                    "The replacement rules could not be parsed".to_string()))?;
             if parse_elem(&mut chars).is_some() {
-                return Err(ERR_INPUT_MALFORMED)
+                return Err(AoCError::BadInputFormat(format!(
+                    "Replacement line malformed. Expected '<pattern> => <replacement>.\n\
+                    Found: '{}'", line
+                )))
             }
             let index = elems.add(tmp);
             elems.set_intermediate(index);
@@ -197,17 +219,20 @@ struct Molecule {
 }
 
 impl Molecule {
-    fn from_rule(str: &str, elems: &Elements) -> Result<Self, &'static str> {
+    fn from_rule(str: &str, elems: &Elements) -> Result<Self, AoCError<String>> {
         let words: Vec<&str> = str.split(" => ").collect();
         if words.len() != 2 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(format!(
+                "Replacement line malformed. Expected '<pattern> => <replacement>.\nFound: '{}'",
+                str
+            )))
         }
         let negative = Self::from_string(words[0], elems)?;
         let positive = Self::from_string(words[1], elems)?;
         Ok(positive - negative)
     }
 
-    fn from_string(str: &str, elems: &Elements) -> Result<Self, &'static str> {
+    fn from_string(str: &str, elems: &Elements) -> Result<Self, AoCError<String>> {
         let mut counts = vec![0; elems.elements.len()];
         let mut chars = str.chars().peekable();
         while let Some(e) = Self::parse_elem(&mut chars, elems) {
@@ -216,9 +241,11 @@ impl Molecule {
         Ok(Self{counts})
     }
 
-    fn parse_elem(chars: &mut Peekable<Chars>, elems: &Elements) -> Option<Result<usize, &'static str>> {
+    fn parse_elem(chars: &mut Peekable<Chars>, elems: &Elements) -> Option<Result<usize, AoCError<String>>> {
         let res = parse_elem(chars)?;
-        Some(elems.get_index(&res).ok_or(ERR_INPUT_MALFORMED))
+        Some(elems.get_index(&res).ok_or_else(|| AoCError::BadInputFormat(
+            "The replacement rules could not be parsed".to_string()))
+        )
     }
 
     fn is_valid(&self, goal: &Self) -> bool {
@@ -284,8 +311,6 @@ impl Sub for Molecule {
         Self{counts}
     }
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {
