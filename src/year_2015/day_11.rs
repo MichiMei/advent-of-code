@@ -1,17 +1,22 @@
 use std::fmt::{Display, Formatter};
+use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("The input is expected to be exactly one line, found {} lines", input.len())
+        ))
     }
     let mut password = Password::from(input.first().unwrap());
     password.next();
     Ok(password.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("The input is expected to be exactly one line, found {} lines", input.len())
+        ))
     }
     let mut password = Password::from(input.first().unwrap());
     password.next();
@@ -114,8 +119,6 @@ impl Display for Password {
     }
 }
 
-const ERR_VEC_LENGTH: &str = "The input is expected to be exactly one line";
-
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
@@ -123,11 +126,8 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        let v0 = vec!["abcdefgh".to_string()];
-        assert_eq!(part_1(&v0), Ok("abcdffaa".to_string()));
-
-        let v1 = vec!["ghijklmn".to_string()];
-        assert_eq!(part_1(&v1), Ok("ghjaabcc".to_string()));
+        assert_eq!(part_1(&["abcdefgh".to_string()]), Ok("abcdffaa".to_string()));
+        assert_eq!(part_1(&["ghijklmn".to_string()]), Ok("ghjaabcc".to_string()));
     }
 
     #[test]

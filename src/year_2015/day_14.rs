@@ -1,6 +1,7 @@
-use std::cmp::{max, min};
+use std::cmp::{max, min, Ordering};
+use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut maximum = 0;
     for line in input {
         let reindeer = Reindeer::from(line)?;
@@ -11,12 +12,12 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(maximum.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let score = calculate_best_score(input, 2503)?;
     Ok(score.to_string())
 }
 
-fn calculate_best_score(input: &Vec<String>, rounds: usize) -> Result<usize, &str> {
+fn calculate_best_score(input: &[String], rounds: usize) -> Result<usize, AoCError<String>> {
     let mut reindeers = vec![];
     let mut scores = vec![];
     for line in input {
@@ -29,14 +30,16 @@ fn calculate_best_score(input: &Vec<String>, rounds: usize) -> Result<usize, &st
         let mut max_distance = 0;
         for (index, reindeer) in reindeers.iter_mut().enumerate() {
             let tmp = reindeer.advance();
-            if tmp > max_distance {
-                max_distance = tmp;
-                max_index = vec![index];
-            } else if tmp == max_distance {
-                max_index.push(index);
+            match tmp.cmp(&max_distance) {
+                Ordering::Less => {}
+                Ordering::Equal => max_index.push(index),
+                Ordering::Greater => {
+                    max_distance = tmp;
+                    max_index = vec![index];
+                }
             }
         }
-        assert!(max_index.len() > 0);
+        assert!(!max_index.is_empty());
         for index in max_index {
             scores[index] += 1;
         }
@@ -59,14 +62,30 @@ struct Reindeer {
 }
 
 impl Reindeer {
-    fn from(str: &str) -> Result<Self, &str> {
-        let words: Vec<&str> = str.split(" ").collect();
+    fn from(str: &str) -> Result<Self, AoCError<String>> {
+        let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 15 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Malformed input line. Expected '<name> can fly <speed> km/s for \
+                <fly_duration> seconds, but then must rest for <rest_duration> seconds.'. Found \
+                '{}'",  str)
+            ))
         }
-        let speed = words[3].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-        let fly_time = words[6].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-        let rest_time = words[13].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+        let speed = words[3].parse().map_err(|_| AoCError::BadInputFormat(
+            format!("Malformed input line. Expected '<name> can fly <speed> km/s for \
+                <fly_duration> seconds, but then must rest for <rest_duration> seconds.'. Found \
+                '{}'",  str)
+        ))?;
+        let fly_time = words[6].parse().map_err(|_| AoCError::BadInputFormat(
+            format!("Malformed input line. Expected '<name> can fly <speed> km/s for \
+                <fly_duration> seconds, but then must rest for <rest_duration> seconds.'. Found \
+                '{}'",  str)
+        ))?;
+        let rest_time = words[13].parse().map_err(|_| AoCError::BadInputFormat(
+            format!("Malformed input line. Expected '<name> can fly <speed> km/s for \
+                <fly_duration> seconds, but then must rest for <rest_duration> seconds.'. Found \
+                '{}'",  str)
+        ))?;
         let status = Status::Flying(fly_time);
         let distance = 0;
 
@@ -106,15 +125,13 @@ enum Status {
     Resting(usize),
 }
 
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
     use super::*;
 
     #[test]
-    fn check_reindeer_get_distance() -> Result<(), &'static str>{
+    fn check_reindeer_get_distance() -> Result<(), AoCError<String>>{
         let v0 = "Comet can fly 14 km/s for 10 seconds, but then must rest for 127 seconds.";
         let r0 = Reindeer::from(v0)?;
         assert_eq!(r0.get_distance(1000), 1120);

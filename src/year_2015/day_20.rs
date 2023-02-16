@@ -1,23 +1,33 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::UnexpectedInputLength(format!(
+            "Input is expected to be exactly one line. Found: {}", input.len()
+        )))
     }
-    let target = input[0].parse::<usize>().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let target = input[0].parse::<usize>().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse the input number. Found: {}\n{}", input[0], e)))?;
 
     let vec = calculate_array(target/10);
-    let index = find_first_bigger(&vec, target/10).ok_or(ERR_INPUT_MALFORMED)?;
+    let index = find_first_bigger(&vec, target/10).ok_or_else(
+        || AoCError::NoSolutionFoundError(String::new()))?;
 
     Ok(index.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::UnexpectedInputLength(format!(
+            "Input is expected to be exactly one line. Found: {}", input.len()
+        )))
     }
-    let target = input[0].parse::<usize>().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let target = input[0].parse::<usize>().map_err(|e| AoCError::BadInputFormat(
+        format!("Could not parse the input number. Found: {}\n{}", input[0], e)))?;
 
     let vec = calculate_array_50(target/11+1);
-    let index = find_first_bigger_with_factor(&vec, target, 11).ok_or(ERR_INPUT_MALFORMED)?;
+    let index = find_first_bigger_with_factor(&vec, target, 11).ok_or_else(
+        || AoCError::NoSolutionFoundError(String::new()))?;
 
     Ok(index.to_string())
 }
@@ -48,7 +58,7 @@ fn calculate_array_50(max_house: usize) -> Vec<usize> {
     vec
 }
 
-fn find_first_bigger(vec: &Vec<usize>, target: usize) -> Option<usize> {
+fn find_first_bigger(vec: &[usize], target: usize) -> Option<usize> {
     for (index, val) in vec.iter().enumerate() {
         if *val >= target {
             return Some(index+1)
@@ -57,7 +67,7 @@ fn find_first_bigger(vec: &Vec<usize>, target: usize) -> Option<usize> {
     None
 }
 
-fn find_first_bigger_with_factor(vec: &Vec<usize>, target: usize, factor: usize) -> Option<usize> {
+fn find_first_bigger_with_factor(vec: &[usize], target: usize, factor: usize) -> Option<usize> {
     for (index, val) in vec.iter().enumerate() {
         if *val*factor >= target {
             return Some(index+1)
@@ -66,8 +76,6 @@ fn find_first_bigger_with_factor(vec: &Vec<usize>, target: usize, factor: usize)
     None
 }
 
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
@@ -75,9 +83,9 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["10".to_string()]), Ok("1".to_string()));
-        assert_eq!(part_1(&vec!["70".to_string()]), Ok("4".to_string()));
-        assert_eq!(part_1(&vec!["150".to_string()]), Ok("8".to_string()));
+        assert_eq!(part_1(&["10".to_string()]), Ok("1".to_string()));
+        assert_eq!(part_1(&["70".to_string()]), Ok("4".to_string()));
+        assert_eq!(part_1(&["150".to_string()]), Ok("8".to_string()));
     }
 
     #[test]
@@ -91,7 +99,7 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["100".to_string()]), Ok("6".to_string()));
+        assert_eq!(part_2(&["100".to_string()]), Ok("6".to_string()));
     }
 
     #[test]

@@ -1,12 +1,13 @@
 use std::cmp::max;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let recipe = Recipe::from(input)?;
     let res = find_optimum(&recipe, &mut vec![]);
     Ok(res.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let recipe = Recipe::from(input)?;
     let res = find_optimum_500_calories(&recipe, &mut vec![]);
     Ok(res.to_string())
@@ -75,7 +76,7 @@ struct Recipe {
 }
 
 impl Recipe {
-    fn from(input: &Vec<String>) -> Result<Self, &'static str> {
+    fn from(input: &[String]) -> Result<Self, AoCError<String>> {
         let mut properties = vec![];
         for line in input {
            properties.push(parse_ingredient(line)?);
@@ -84,7 +85,7 @@ impl Recipe {
         Ok(Self{properties})
     }
 
-    fn calc_score(&self, amounts: &Vec<i32>) -> i32 {
+    fn calc_score(&self, amounts: &[i32]) -> i32 {
         let mut scores = self.get_prop_scores(amounts);
 
         let mut product = 1;
@@ -98,12 +99,12 @@ impl Recipe {
         product
     }
 
-    fn get_calories(&self, amounts: &Vec<i32>) -> i32 {
+    fn get_calories(&self, amounts: &[i32]) -> i32 {
         let scores = self.get_prop_scores(amounts);
         scores[4]
     }
 
-    fn get_prop_scores(&self, amounts: &Vec<i32>) -> [i32; 5] {
+    fn get_prop_scores(&self, amounts: &[i32]) -> [i32; 5] {
         let mut scores = [0; 5];
         for (prop_index, property) in self.properties.iter().enumerate() {
             for index in 0..scores.len() {
@@ -114,33 +115,49 @@ impl Recipe {
     }
 }
 
-fn parse_ingredient(line: &str) -> Result<[i32; 5], &'static str> {
-    let words: Vec<&str> = line.split(" ").collect();
+fn parse_ingredient(line: &str) -> Result<[i32; 5], AoCError<String>> {
+    let words: Vec<&str> = line.split(' ').collect();
     if words.len() != 11 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Unexpected input line.\nExpected '<name>: capacity <val>, durability <val>, \
+            flavor <val>, texture <val>, calories <val>'.\nFound '{}'", line)
+        ))
     }
     let capacity = words[2];
     let capacity = &capacity[0..capacity.len()-1].
-        parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+        parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Unexpected input line.\nExpected '<name>: capacity <val>, durability <val>, \
+            flavor <val>, texture <val>, calories <val>'.\nFound '{}'", line)
+    ))?;
 
     let durability = words[4];
     let durability = &durability[0..durability.len()-1].
-        parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+        parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Unexpected input line.\nExpected '<name>: capacity <val>, durability <val>, \
+            flavor <val>, texture <val>, calories <val>'.\nFound '{}'", line)
+    ))?;
 
     let flavor = words[6];
     let flavor = &flavor[0..flavor.len()-1].
-        parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+        parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Unexpected input line.\nExpected '<name>: capacity <val>, durability <val>, \
+            flavor <val>, texture <val>, calories <val>'.\nFound '{}'", line)
+    ))?;
 
     let texture = words[8];
     let texture = &texture[0..texture.len()-1].
-        parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+        parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Unexpected input line.\nExpected '<name>: capacity <val>, durability <val>, \
+            flavor <val>, texture <val>, calories <val>'.\nFound '{}'", line)
+    ))?;
 
-    let calories = words[10].parse::<i32>().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let calories = words[10].parse::<i32>().map_err(|_| AoCError::BadInputFormat(
+        format!("Unexpected input line.\nExpected '<name>: capacity <val>, durability <val>, \
+            flavor <val>, texture <val>, calories <val>'.\nFound '{}'", line)
+    ))?;
 
     Ok([*capacity, *durability, *flavor, *texture, calories])
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {
@@ -148,13 +165,13 @@ mod test {
     use super::*;
 
     #[test]
-    fn check_recipe_calc_score() -> Result<(), &'static str> {
+    fn check_recipe_calc_score() -> Result<(), AoCError<String>> {
         let v = vec![
             "Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8".to_string(),
             "Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3".to_string()
         ];
         let recipe = Recipe::from(&v)?;
-        assert_eq!(recipe.calc_score(&vec![44, 56]), 62842880);
+        assert_eq!(recipe.calc_score(&[44, 56]), 62842880);
         Ok(())
     }
 

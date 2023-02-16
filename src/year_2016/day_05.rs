@@ -1,7 +1,7 @@
 use crate::errors::AoCError;
 use crate::md5_collision::{find_hash_collision_parallel, hash};
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
         return Err(AoCError::UnexpectedInputLength(
             format!("The input is expected to be exactly one line. Found {} lines", input.len())
@@ -25,7 +25,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     Ok(res)
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
         return Err(AoCError::UnexpectedInputLength(
             format!("The input is expected to be exactly one line. Found {} lines", input.len())
@@ -89,7 +89,7 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert_eq!(part_1(&vec!["abc".to_string()]), Ok("18f47a30".to_string()));
+        assert_eq!(part_1(&["abc".to_string()]), Ok("18f47a30".to_string()));
     }
 
     #[test]
@@ -103,7 +103,7 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["abc".to_string()]), Ok("05ace8e3".to_string()));
+        assert_eq!(part_2(&["abc".to_string()]), Ok("05ace8e3".to_string()));
     }
 
     #[test]

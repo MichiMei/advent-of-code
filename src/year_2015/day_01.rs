@@ -1,6 +1,10 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Input should be 1 line, found {} lines", input.len())
+        ))
     }
     let mut counter = 0;
     let line = input.first().unwrap();
@@ -8,17 +12,21 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
         match char {
             '(' => counter += 1,
             ')' => counter -= 1,
-            _ => {
-                return Err(ERR_CHAR_UNSUPPORTED)
+            c => {
+                return Err(AoCError::BadInputFormat(
+                    format!("Unexpected char '{}'. Only '(' and ')' allowed", c)
+                ))
             },
         }
     }
     Ok(counter.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
-        return Err(ERR_VEC_LENGTH)
+        return Err(AoCError::UnexpectedInputLength(
+            format!("Input should be 1 line, found {} lines", input.len())
+        ))
     }
     let mut height_counter = 0;
     let mut position_counter = 1usize;
@@ -27,8 +35,10 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
         match char {
             '(' => height_counter += 1,
             ')' => height_counter -= 1,
-            _ => {
-                return Err(ERR_CHAR_UNSUPPORTED)
+            c => {
+                return Err(AoCError::BadInputFormat(
+                    format!("Unexpected char '{}'. Only '(' and ')' allowed", c)
+                ))
             },
         }
         if height_counter < 0 {
@@ -37,12 +47,10 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
         }
         position_counter += 1;
     }
-    Err(ERR_NEVER_NEGATIVE)
+    Err(AoCError::NoSolutionFoundError(
+        "Santa never reaches the basement".to_string()
+    ))
 }
-
-const ERR_VEC_LENGTH: &str = "The input is expected to be exactly one line";
-const ERR_CHAR_UNSUPPORTED: &str = "Unexpected character in input, only '(' and ')' allowed";
-const ERR_NEVER_NEGATIVE: &str = "Santa never reaches the basement";
 
 #[cfg(test)]
 mod test {
@@ -51,19 +59,19 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert!(part_1(&vec!["(())".to_string()]) == Ok("0".to_string()));
-        assert!(part_1(&vec!["()()".to_string()]) == Ok("0".to_string()));
+        assert!(part_1(&["(())".to_string()]) == Ok("0".to_string()));
+        assert!(part_1(&["()()".to_string()]) == Ok("0".to_string()));
 
-        assert!(part_1(&vec!["(((".to_string()]) == Ok("3".to_string()));
-        assert!(part_1(&vec!["(()(()(".to_string()]) == Ok("3".to_string()));
+        assert!(part_1(&["(((".to_string()]) == Ok("3".to_string()));
+        assert!(part_1(&["(()(()(".to_string()]) == Ok("3".to_string()));
 
-        assert!(part_1(&vec!["))(((((".to_string()]) == Ok("3".to_string()));
+        assert!(part_1(&["))(((((".to_string()]) == Ok("3".to_string()));
 
-        assert!(part_1(&vec!["())".to_string()]) == Ok("-1".to_string()));
-        assert!(part_1(&vec!["))(".to_string()]) == Ok("-1".to_string()));
+        assert!(part_1(&["())".to_string()]) == Ok("-1".to_string()));
+        assert!(part_1(&["))(".to_string()]) == Ok("-1".to_string()));
 
-        assert!(part_1(&vec![")))".to_string()]) == Ok("-3".to_string()));
-        assert!(part_1(&vec![")())())".to_string()]) == Ok("-3".to_string()));
+        assert!(part_1(&[")))".to_string()]) == Ok("-3".to_string()));
+        assert!(part_1(&[")())())".to_string()]) == Ok("-3".to_string()));
     }
 
     #[test]
@@ -77,9 +85,9 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert!(part_2(&vec![")".to_string()]) == Ok("1".to_string()));
+        assert!(part_2(&[")".to_string()]) == Ok("1".to_string()));
 
-        assert!(part_2(&vec!["()())".to_string()]) == Ok("5".to_string()));
+        assert!(part_2(&["()())".to_string()]) == Ok("5".to_string()));
     }
 
     #[test]

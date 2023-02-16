@@ -1,10 +1,12 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut pc = SOTAComputer::from_input(input, 0)?;
     pc.run();
     Ok(pc.register_b.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut pc = SOTAComputer::from_input(input, 1)?;
     pc.run();
     Ok(pc.register_b.to_string())
@@ -18,11 +20,13 @@ struct SOTAComputer {
 }
 
 impl SOTAComputer {
-    fn from_input(input: &Vec<String>, register_a: usize) -> Result<Self, &'static str> {
+    fn from_input(input: &[String], register_a: usize) -> Result<Self, AoCError<String>> {
         let register_b = 0;
         let mut instructions = vec![];
         for line in input.iter() {
-            instructions.push(Instruction::from(line).ok_or(ERR_INPUT_MALFORMED)?);
+            instructions.push(Instruction::from(line)
+                .ok_or_else(|| AoCError::BadInputFormat(
+                    format!("Parsing instruction failed: '{}'", line)))?);
         }
         let ip = Some(0);
         Ok(Self{register_a, register_b, instructions, ip})
@@ -136,8 +140,8 @@ enum Instruction {
 
 impl Instruction {
     fn from(line: &str) -> Option<Self> {
-        let line = line.replace(",", "");
-        let words: Vec<&str> = line.split(" ").collect();
+        let line = line.replace(',', "");
+        let words: Vec<&str> = line.split(' ').collect();
         if words.len() < 2 || words.len() > 3 {
             return None
         }
@@ -225,15 +229,13 @@ impl Register {
     }
 }
 
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
     use super::*;
 
     #[test]
-    fn check_examples_part_1() -> Result<(), &'static str> {
+    fn check_examples_part_1() -> Result<(), AoCError<String>> {
         let v = vec![
             "inc a".to_string(),
             "jio a, +2".to_string(),

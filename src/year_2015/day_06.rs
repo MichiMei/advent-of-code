@@ -1,21 +1,23 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let line = vec![false; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
-        let (mode, c0, c1) = parse_line(&line)?;
-        for x in c0.0..=c1.0 {
-            for y in c0.1..=c1.1 {
+        let (mode, c0, c1) = parse_line(line)?;
+        for row in grid[c0.0..=c1.0].iter_mut() {
+            for elem in row[c0.1..=c1.1].iter_mut() {
                 match mode {
-                    Mode::Turn(status) => grid[x][y] = status,
-                    Mode::Toggle => grid[x][y] = !grid[x][y],
+                    Mode::Turn(status) => *elem = status,
+                    Mode::Toggle => *elem = !*elem
                 }
             }
         }
     }
     let mut count = 0usize;
-    for x in 0..grid.len() {
-        for y in 0..grid[x].len() {
-            if grid[x][y] {
+    for row in grid.iter() {
+        for elem in row.iter() {
+            if *elem {
                 count += 1;
             }
         }
@@ -23,72 +25,89 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let line = vec![0u8; 1000];
     let mut grid = vec![line; 1000];
     for line in input {
-        let (mode, c0, c1) = parse_line(&line)?;
-        for x in c0.0..=c1.0 {
-            for y in c0.1..=c1.1 {
+        let (mode, c0, c1) = parse_line(line)?;
+        for row in grid[c0.0..=c1.0].iter_mut() {
+            for elem in row[c0.1..=c1.1].iter_mut() {
                 match mode {
-                    Mode::Turn(status) => {
-                        if status {
-                            grid[x][y] += 1;
-                        } else {
-                            if grid[x][y] > 0 {
-                                grid[x][y] -= 1;
-                            }
-                        }
-                    }
-                    Mode::Toggle => grid[x][y] += 2,
+                    Mode::Turn(true) => *elem += 1,
+                    Mode::Turn(false) => *elem = elem.saturating_sub(1),
+                    Mode::Toggle => *elem += 2,
                 }
             }
         }
     }
     let mut count = 0i128;
-    for x in 0..grid.len() {
-        for y in 0..grid[x].len() {
-            count += grid[x][y] as i128;
+    for row in grid.iter() {
+        for elem in row.iter() {
+            count += *elem as i128
         }
     }
     Ok(count.to_string())
 }
 
-fn parse_line(str: &str) -> Result<(Mode, (usize, usize), (usize, usize)), &str> {
+type Command = (Mode, (usize, usize), (usize, usize));
+
+fn parse_line(str: &str) -> Result<Command, AoCError<String>> {
     if str.starts_with("turn") {
-        let words: Vec<&str> = str.split(" ").collect();
+        let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 5 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Bad 'turn' instruction. Expected: 'turn [on/off] <p0> through <p1>'.\n\
+                found: {}", str)
+            ))
         }
         let mode = match words[1] {
             "on" => Mode::Turn(true),
             "off" => Mode::Turn(false),
-            _ => return Err(ERR_INPUT_MALFORMED)
+            _ => {
+                return Err(AoCError::BadInputFormat(
+                    format!("Bad 'turn' instruction. Expected: 'turn [on/off] <p0> through <p1>'.\n\
+                        found: {}", str)
+                ));
+            }
         };
         let c0 = parse_corner(words[2])?;
         let c1 = parse_corner(words[4])?;
         Ok((mode, c0, c1))
     } else if str.starts_with("toggle") {
-        let words: Vec<&str> = str.split(" ").collect();
+        let words: Vec<&str> = str.split(' ').collect();
         if words.len() != 4 {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Bad 'toggle' instruction. Expected: 'toggle <p0> through <p1>'.\n\
+                    found: {}", str)
+            ))
         }
         let mode = Mode::Toggle;
         let c0 = parse_corner(words[1])?;
         let c1 = parse_corner(words[3])?;
         Ok((mode, c0, c1))
     } else {
-        Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Bad instruction. Expected: \n
+                \t'toggle <p0> through <p1>'.\n\
+                \t'turn [on/off] <p0> through <p1>'
+                found: {}", str)
+        ))
     }
 }
 
-fn parse_corner(str: &str) -> Result<(usize, usize), &'static str> {
-    let words: Vec<&str> = str.split(",").collect();
+fn parse_corner(str: &str) -> Result<(usize, usize), AoCError<String>> {
+    let words: Vec<&str> = str.split(',').collect();
     if words.len() != 2 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Could not parse point, expected 'x,y', found '{}'", str)
+        ))
     }
-    let val0 = words[0].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-    let val1 = words[1].parse().map_err(|_| ERR_INPUT_MALFORMED)?;
+    let val0 = words[0].parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Could not parse number. Only positive numbers allowed, found {}", words[0])
+    ))?;
+    let val1 = words[1].parse().map_err(|_| AoCError::BadInputFormat(
+        format!("Could not parse number. Only positive numbers allowed, found {}", words[1])
+    ))?;
     Ok((val0, val1))
 }
 
@@ -96,8 +115,6 @@ enum Mode {
     Turn(bool),
     Toggle,
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input is malformed";
 
 #[cfg(test)]
 mod test {
@@ -130,9 +147,9 @@ mod test {
 
     #[test]
     fn check_examples_part_2() {
-        assert_eq!(part_2(&vec!["turn on 0,0 through 0,0".to_string()]),
+        assert_eq!(part_2(&["turn on 0,0 through 0,0".to_string()]),
                    Ok("1".to_string()));
-        assert_eq!(part_2(&vec!["toggle 0,0 through 999,999".to_string()]),
+        assert_eq!(part_2(&["toggle 0,0 through 999,999".to_string()]),
                    Ok("2000000".to_string()));
     }
 

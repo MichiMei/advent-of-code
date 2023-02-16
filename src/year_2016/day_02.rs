@@ -2,7 +2,7 @@ use std::cmp::min;
 use std::str::Chars;
 use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut res = String::new();
     let mut start_button = '5';
     for line in input {
@@ -17,7 +17,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     Ok(res)
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut res = String::new();
     let mut x_pos = 0;
     let mut y_pos = 2;
@@ -100,7 +100,7 @@ struct SimpleKeypad {
 
 impl SimpleKeypad {
     fn from_u8(digit: u8) -> Option<Self> {
-        if digit < 1 || digit > 9 {
+        if !(1..=9).contains(&digit) {
             return None
         }
         let y_pos = ((digit-1)/3) as usize;
@@ -135,7 +135,7 @@ impl Keypad for SimpleKeypad {
 
     fn get_digit(&self) -> char {
         let u8_digit = self.y_pos*3 + self.x_pos + 1;
-        assert!(u8_digit >= 1 && u8_digit <= 9);
+        assert!((1..=9).contains(&u8_digit));
 
         let str = format!("{}", u8_digit);
         assert_eq!(str.len(), 1);

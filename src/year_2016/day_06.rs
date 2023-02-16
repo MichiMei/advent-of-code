@@ -1,9 +1,9 @@
 use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
-    if input.len() < 1 {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
+    if input.is_empty() {
         return Err(AoCError::UnexpectedInputLength(
-            format!("Input needs to have at least one line.")
+            "Input needs to have at least one line.".to_string()
         ))
     }
     let mut iter = input.iter();
@@ -16,15 +16,15 @@ pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
         Ok(code)
     } else {
         Err(AoCError::NoSolutionFoundError(
-            format!("No solution was found. At least one char is not unique.")
+            "No solution was found. At least one char is not unique.".to_string()
         ))
     }
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
-    if input.len() < 1 {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
+    if input.is_empty() {
         return Err(AoCError::UnexpectedInputLength(
-            format!("Input needs to have at least one line.")
+            "Input needs to have at least one line.".to_string()
         ))
     }
     let mut iter = input.iter();
@@ -37,7 +37,7 @@ pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
         Ok(code)
     } else {
         Err(AoCError::NoSolutionFoundError(
-            format!("No solution was found. At least one char is not unique.")
+            "No solution was found. At least one char is not unique.".to_string()
         ))
     }
 }
@@ -91,7 +91,7 @@ struct CharCounter {
 impl CharCounter {
     fn add_char(&mut self, char: char) -> Result<(), AoCError<String>> {
         let index = Self::char_to_usize(char)
-            .ok_or(AoCError::BadInputFormat(
+            .ok_or_else(|| AoCError::BadInputFormat(
                 format!("Unexpected character '{}'. Only a-z allowed.", char)
             ))?;
         assert!(index < self.counts.len());
@@ -125,12 +125,11 @@ impl CharCounter {
                 min_index = None;
             }
         }
-        let x = min_index.map(|t| Self::usize_to_char(t)).flatten();
-        x
+        min_index.and_then(Self::usize_to_char)
     }
 
     fn char_to_usize(char: char) -> Option<usize> {
-        if char > 'z' || char < 'a' {
+        if !('a'..='z').contains(&char) {
             return None
         }
         let index = (char as usize) - ('a' as usize);
@@ -145,7 +144,7 @@ impl CharCounter {
         let tmp = index + ('a' as usize);
         assert!(tmp <= u8::MAX as usize);
         let char = tmp as u8 as char;
-        assert!(char >= 'a' && char <= 'z');
+        assert!(('a'..='z').contains(&char));
         Some(char)
     }
 }

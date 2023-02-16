@@ -2,7 +2,7 @@ use std::io;
 use advent_of_code::{read_lines_untrimmed_from_file, year_2015};
 
 
-
+#[allow(dead_code)]
 fn run_2015() -> io::Result<()> {
     let year = "2015";
     let input_folder = format!("input/year_{}/", year);
@@ -152,7 +152,7 @@ fn run_2015() -> io::Result<()> {
     println!("y{}-d24_p2: {}", year, year_2015::day_24::part_2(&input).unwrap());
 
     // day25
-    let input_name = input_folder.to_string() + "/input_day_25.txt";
+    let input_name = input_folder + "/input_day_25.txt";
     let input = read_lines_untrimmed_from_file(&input_name)?;
     println!("y{}-d25_p1: {}", year, year_2015::day_25::part_1(&input).unwrap());
     println!("y{}-d25_p2: {}", year, year_2015::day_25::part_2(&input).unwrap());

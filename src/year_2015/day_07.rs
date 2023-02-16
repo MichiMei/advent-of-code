@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{BitAnd, BitOr, Not, Shl, Shr};
+use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut variables = HashMap::new();
     let mut gates = vec![];
     for line in input {
-        let gate = Gate::from(&line)?;
+        let gate = Gate::from(line)?;
         if let Some((name, val)) = gate.is_input() {
             variables.insert(name, val);
         } else {
@@ -21,7 +22,9 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
                 Ok((v_name, v_val)) => {
                      if let Some(prev)  = variables.insert(v_name, v_val) {
                          if prev != v_val {
-                             return Err(ERR_VARIABLE_REASSIGNED)
+                             return Err(AoCError::NoSolutionFoundError(
+                                 "A variable was assigned two different values.".to_string()
+                             ))
                          }
                      }
                 }
@@ -31,18 +34,18 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
         gates = unsolvable;
     }
 
-    if let Some(val) = variables.get("a") {
-        Ok(val.to_string())
-    } else {
-        Err(ERR_VARIABLE_A_MISSING)
-    }
+    variables.get("a").ok_or_else(||
+        AoCError::NoSolutionFoundError(
+            "The value for variable 'a' could not be calculated".to_string()
+        )
+    ).map(|t| t.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut variables = HashMap::new();
     let mut gates = vec![];
     for line in input {
-        let gate = Gate::from(&line)?;
+        let gate = Gate::from(line)?;
         if let Some((name, mut val)) = gate.is_input() {
             if &name == "b" {
                 val = 956;
@@ -61,7 +64,9 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
                     if let Some(prev)  = variables.insert(v_name.clone(), v_val) {
                         if prev != v_val {
                             println!("variable {} ({}) set to {}", v_name, prev, v_val);
-                            return Err(ERR_VARIABLE_REASSIGNED)
+                            return Err(AoCError::NoSolutionFoundError(
+                                "A variable was assigned two different values.".to_string()
+                            ))
                         }
                     }
                 }
@@ -71,11 +76,11 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
         gates = unsolvable;
     }
 
-    if let Some(val) = variables.get("a") {
-        Ok(val.to_string())
-    } else {
-        Err(ERR_VARIABLE_A_MISSING)
-    }
+    variables.get("a").ok_or_else(||
+        AoCError::NoSolutionFoundError(
+            "The value for variable 'a' could not be calculated".to_string()
+        )
+    ).map(|t| t.to_string())
 }
 
 enum Gate {
@@ -88,8 +93,8 @@ enum Gate {
 }
 
 impl Gate {
-    pub fn from(str: &str) -> Result<Self, &str> {
-        let words: Vec<&str> = str.split(" ").collect();
+    pub fn from(str: &str) -> Result<Self, AoCError<String>> {
+        let words: Vec<&str> = str.split(' ').collect();
         let operation = if words.len() == 3 {
             ""
         } else if words.len() == 4 {
@@ -97,7 +102,9 @@ impl Gate {
         } else if words.len() == 5 {
             words[1]
         } else {
-            return Err(ERR_INPUT_MALFORMED)
+            return Err(AoCError::BadInputFormat(
+                format!("Unsupported statement '{}'", str)
+            ))
         };
         Ok(match operation {
             "" => {
@@ -134,7 +141,11 @@ impl Gate {
                 let out = words[4].to_string();
                 Self::RShift(in0?, in1?, out)
             }
-            _ => return Err(ERR_INPUT_MALFORMED),
+            op => {
+                return Err(AoCError::BadInputFormat(
+                    format!("Unsupported operand '{}'", op)
+                ))
+            }
         })
     }
 
@@ -157,8 +168,8 @@ impl Gate {
             Gate::And(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().bitand(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.bitand(v1)))
                 } else {
                     Err(self)
                 }
@@ -166,8 +177,8 @@ impl Gate {
             Gate::Or(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().bitor(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.bitor(v1)))
                 } else {
                     Err(self)
                 }
@@ -175,8 +186,8 @@ impl Gate {
             Gate::LShift(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().shl(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.shl(v1)))
                 } else {
                     Err(self)
                 }
@@ -184,8 +195,8 @@ impl Gate {
             Gate::RShift(in0, in1, out) => {
                 let v0 = in0.get_value(variables);
                 let v1 = in1.get_value(variables);
-                if v0.is_some() && v1.is_some() {
-                    Ok((out.to_string(), v0.unwrap().shr(v1.unwrap())))
+                if let (Some(v0), Some(v1)) = (v0, v1) {
+                    Ok((out.to_string(), v0.shr(v1)))
                 } else {
                     Err(self)
                 }
@@ -208,8 +219,10 @@ impl Display for Gate {
             Gate::Not(i, o) => write!(f, "NOT {} -> {}", i, o),
             Gate::And(i0, i1, o) => write!(f, "{} AND {} -> {}", i0, i1, o),
             Gate::Or(i0, i1, o) => write!(f, "{} OR {} -> {}", i0, i1, o),
-            Gate::LShift(i0, i1, o) => write!(f, "{} LSHIFT {} -> {}", i0, i1, o),
-            Gate::RShift(i0, i1, o) => write!(f, "{} RSHIFT {} -> {}", i0, i1, o),
+            Gate::LShift(i0, i1, o) =>
+                write!(f, "{} LSHIFT {} -> {}", i0, i1, o),
+            Gate::RShift(i0, i1, o) =>
+                write!(f, "{} RSHIFT {} -> {}", i0, i1, o),
         }
     }
 }
@@ -227,26 +240,22 @@ enum Input {
 }
 
 impl Input {
-    pub fn from(str: &str) -> Result<Self, &str> {
+    pub fn from(str: &str) -> Result<Self, AoCError<String>> {
         if let Ok(val) = str.parse() {
             Ok(Self::Value(val))
+        } else if str.is_empty() {
+            Err(AoCError::BadInputFormat(
+                "The value/variable-name for a input cannot be empty".to_string()
+            ))
         } else {
-            if str.is_empty() {
-                Err(ERR_INPUT_MALFORMED)
-            } else {
-                Ok(Self::Variable(str.to_string()))
-            }
+            Ok(Self::Variable(str.to_string()))
         }
     }
 
     pub fn get_value(&self, variables: &HashMap<String, u16>) -> Option<u16> {
         match self {
             Input::Variable(name) => {
-                if let Some(val) = variables.get(name) {
-                    Some(*val)
-                } else {
-                    None
-                }
+                variables.get(name).copied()
             }
             Input::Value(val) => Some(*val),
         }
@@ -267,10 +276,6 @@ impl Debug for Input {
         write!(f, "{}", self)
     }
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input is malformed";
-const ERR_VARIABLE_REASSIGNED: &str = "A variable was assigned two different values";
-const ERR_VARIABLE_A_MISSING: &str = "The value for 'a' could not be calculated";
 
 #[cfg(test)]
 mod test {

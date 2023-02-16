@@ -1,7 +1,8 @@
 use std::fmt::{Display, Formatter};
 use std::mem::swap;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut lights = Lights::from(input)?;
     let mut tmp = Lights::new(lights.grid.len(), lights.grid[0].len());
 
@@ -16,7 +17,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     Ok(lights_ref.count_on().to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut lights = Lights::from(input)?;
     let mut tmp = Lights::new(lights.grid.len(), lights.grid[0].len());
 
@@ -44,7 +45,7 @@ impl Lights {
         Self{grid}
     }
 
-    fn from(input: &Vec<String>) -> Result<Self, &'static str> {
+    fn from(input: &[String]) -> Result<Self, AoCError<String>> {
         let mut grid = vec![];
         for line in input {
             let mut row = vec![];
@@ -52,7 +53,9 @@ impl Lights {
                 match c {
                     '.' => row.push(false),
                     '#' => row.push(true),
-                    _ => return Err(ERR_INPUT_MALFORMED)
+                    c => return Err(AoCError::BadInputFormat(format!(
+                        "Found unexpected character '{}'. Only '#' and '.' allowed!", c
+                    ))),
                 }
             }
             grid.push(row)
@@ -154,13 +157,11 @@ impl Display for Lights {
                     write!(f, ".").unwrap();
                 }
             }
-            write!(f, "\n").unwrap();
+            writeln!(f).unwrap();
         }
-        write!(f, "\n")
+        writeln!(f)
     }
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
 
 #[cfg(test)]
 mod test {
@@ -169,7 +170,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn check_examples_part_1() -> Result<(), &'static str> {
+    fn check_examples_part_1() -> Result<(), AoCError<String>> {
         let v = vec![
             ".#.#.#".to_string(),
             "...##.".to_string(),
@@ -203,7 +204,7 @@ mod test {
     }
 
     #[test]
-    fn check_examples_part_2() -> Result<(), &'static str>{
+    fn check_examples_part_2() -> Result<(), AoCError<String>>{
         let v = vec![
             ".#.#.#".to_string(),
             "...##.".to_string(),

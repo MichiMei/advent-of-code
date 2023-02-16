@@ -1,6 +1,6 @@
 use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut count = 0;
     for line in input {
         let room = Room::from_line(line)?;
@@ -11,7 +11,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut result = None;
     for line in input {
         let room = Room::from_line(line)?;
@@ -43,17 +43,17 @@ struct Room<'a> {
 
 impl<'a> Room<'a> {
     fn from_line(line: &'a str) -> Result<Self, AoCError<String>> {
-        let split0 = line.rfind("-").ok_or(AoCError::BadInputFormat(
-            format!("No '-' found in the input, each line should consist of \
-            <encrypted_room_name>-<sector-id>[<checksum>]")
+        let split0 = line.rfind('-').ok_or_else(|| AoCError::BadInputFormat(
+            "No '-' found in the input, each line should consist of \
+            <encrypted_room_name>-<sector-id>[<checksum>]".to_string()
         ))?;
-        let split1 = line.find("[").ok_or(AoCError::BadInputFormat(
-            format!("No '[' found in the input, each line should consist of \
-            <encrypted_room_name>-<sector-id>[<checksum>]")
+        let split1 = line.find('[').ok_or_else(|| AoCError::BadInputFormat(
+            "No '[' found in the input, each line should consist of \
+            <encrypted_room_name>-<sector-id>[<checksum>]".to_string()
         ))?;
         assert!(split0 < split1);
         let encrypted_name = &line[..split0];
-        let sector_id = (&line[split0+1..split1]).parse()
+        let sector_id = line[split0+1..split1].parse()
             .map_err(|e| AoCError::BadInputFormat(
             format!("Could not parse sector id, expected a positive number, \
             found {}:\n{}", &line[split0+1..split1], e)
@@ -116,9 +116,9 @@ fn rotate_char(c: char, rotation: usize) -> Result<char, AoCError<String>> {
         return Err(AoCError::BadInputFormat(format!("Unexpected character in encrypted room name. \
             Expected 'a' - 'z' or '-', found '{}'", c)))
     }
-    let alphabet_index = ((c as u8) - ('a' as u8)) as usize;
+    let alphabet_index = ((c as u8) - b'a') as usize;
     let decrypted_index = (alphabet_index + rotation) % 26;
-    let decrypted_char = ((decrypted_index as u8) + ('a' as u8)) as char;
+    let decrypted_char = ((decrypted_index as u8) + b'a') as char;
 
     Ok(decrypted_char)
 }

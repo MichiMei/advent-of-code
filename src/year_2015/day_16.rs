@@ -1,4 +1,6 @@
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+use crate::errors::AoCError;
+
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let sues = parse_sues(input)?;
     let prop_str = "children: 3, cats: 7, samoyeds: 2, pomeranians: 3, akitas: 0, \
         vizslas: 0, goldfish: 5, trees: 3, cars: 2, perfumes: 1";
@@ -10,16 +12,20 @@ pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
     for sue in sues.iter() {
         if correct_props.compatible_part_1(&sue.props) {
             if compatible.is_some() {
-                return Err(ERR_MULTIPLE_COMPATIBLE)
+                return Err(AoCError::MultipleSolutionsFoundError(
+                    "Multiple Sue's could be possible".to_string()
+                ))
             }
             compatible = Some(sue.index);
         }
     }
 
-    Ok(compatible.ok_or(ERR_NO_COMPATIBLE)?.to_string())
+    Ok(compatible.ok_or_else(|| AoCError::NoSolutionFoundError(
+        "No possible Sue found".to_string()
+    ))?.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let sues = parse_sues(input)?;
     let prop_str = "children: 3, cats: 7, samoyeds: 2, pomeranians: 3, akitas: 0, \
         vizslas: 0, goldfish: 5, trees: 3, cars: 2, perfumes: 1";
@@ -31,16 +37,20 @@ pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
     for sue in sues.iter() {
         if correct_props.compatible_part_2(&sue.props) {
             if compatible.is_some() {
-                return Err(ERR_MULTIPLE_COMPATIBLE)
+                return Err(AoCError::MultipleSolutionsFoundError(
+                    "Multiple Sue's could be possible".to_string()
+                ))
             }
             compatible = Some(sue.index);
         }
     }
 
-    Ok(compatible.ok_or(ERR_NO_COMPATIBLE)?.to_string())
+    Ok(compatible.ok_or_else(|| AoCError::NoSolutionFoundError(
+        "No possible Sue found".to_string()
+    ))?.to_string())
 }
 
-fn parse_sues(input: &Vec<String>) -> Result<Vec<Sue>, &str> {
+fn parse_sues(input: &[String]) -> Result<Vec<Sue>, AoCError<String>> {
     let mut res = vec![];
     for line in input {
         res.push(Sue::from(line)?);
@@ -54,14 +64,19 @@ struct Sue {
 }
 
 impl Sue {
-    fn from(line: &str) -> Result<Self, &str> {
+    fn from(line: &str) -> Result<Self, AoCError<String>> {
 
-        let end = line.find(':').ok_or(ERR_INPUT_MALFORMED)?;
+        let end = line.find(':').ok_or_else(|| AoCError::BadInputFormat(
+            format!("Unexpected input line.\nExpected 'Sue <index>: {{<key>: <value>, }}'.\n\
+            Found '{}'", line)
+        ))?;
 
         let x = &line[4..end];
 
-        let index = x.parse().map_err(|_| ERR_INPUT_MALFORMED)?;
-        let prop_strings: Vec<&str> = (&line[end+2..]).split(", ").collect();
+        let index = x.parse().map_err(|e| AoCError::BadInputFormat(
+            format!("Parsing index failed, found '{}'.\n{}", x, e)
+        ))?;
+        let prop_strings: Vec<&str> = line[end+2..].split(", ").collect();
 
         let props = Properties::from(&prop_strings)?;
 
@@ -74,7 +89,7 @@ struct Properties {
 }
 
 impl Properties {
-    fn from(prop_strings: &Vec<&str>) -> Result<Self, &'static str> {
+    fn from(prop_strings: &Vec<&str>) -> Result<Self, AoCError<String>> {
         let mut props = [None; 10];
 
         for str in prop_strings {
@@ -90,7 +105,11 @@ impl Properties {
                 "trees" => props[7] = Some(val),
                 "cars" => props[8] = Some(val),
                 "perfumes" => props[9] = Some(val),
-                _ => return Err(ERR_INPUT_MALFORMED)
+                x => {
+                    return Err(AoCError::BadInputFormat(
+                        format!("Unexpected property '{}'", x)
+                    ))
+                }
             }
         }
 
@@ -133,17 +152,18 @@ impl Properties {
     }
 }
 
-fn parse_property(str: &str) -> Result<(&str, u8), &'static str> {
+fn parse_property(str: &str) -> Result<(&str, u8), AoCError<String>> {
     let words: Vec<&str> = str.split(": ").collect();
     if words.len() != 2 {
-        return Err(ERR_INPUT_MALFORMED)
+        return Err(AoCError::BadInputFormat(
+            format!("Parsing property failed.\nExpected '<property-name>: <property-value>.\n\
+            Found '{}'", str)
+        ))
     }
-    Ok((words[0], words[1].parse().map_err(|_| ERR_INPUT_MALFORMED)?))
+    Ok((words[0], words[1].parse().map_err(|e| AoCError::BadInputFormat(
+        format!("Parsing number failed. Found '{}'.\n{}", words[1], e)
+    ))?))
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_MULTIPLE_COMPATIBLE: &str = "Multiple Sues could be right";
-const ERR_NO_COMPATIBLE: &str = "No right Sues found";
 
 #[cfg(test)]
 mod test {

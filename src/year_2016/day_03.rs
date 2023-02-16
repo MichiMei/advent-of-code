@@ -1,7 +1,7 @@
 use crate::errors::AoCError;
 use crate::errors::AoCError::{BadInputFormat, UnexpectedInputLength};
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut count = 0;
     for line in input {
         let side_lengths = parse_line(line)?;
@@ -13,7 +13,7 @@ pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     Ok(count.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let mut count = 0;
     let iter = input.chunks(3);
     for triple in iter {
@@ -44,7 +44,7 @@ fn parse_line(line: &str) -> Result<[usize; 3], AoCError<String>> {
 
 fn parse_triple(triple: &[String]) -> Result<[[usize; 3]; 3], AoCError<String>> {
     if triple.len() != 3 {
-        return Err(UnexpectedInputLength(format!("The line count should be divisible by 3")))
+        return Err(UnexpectedInputLength("The line count should be divisible by 3".to_string()))
     }
     let side_lengths = triple.iter()
         .map(|line| parse_line(line))

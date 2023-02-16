@@ -1,17 +1,22 @@
 use std::cmp::min;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let weights = parse_input(input)?;
 
-    let res = check_distributions(&weights, 3).ok_or(ERR_NO_SOLUTION)?;
+    let res = check_distributions(&weights, 3)
+        .ok_or_else(|| AoCError::NoSolutionFoundError(
+            "No solution do distribute the presents found.".to_string()))?;
 
     Ok(res.to_string())
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let weights = parse_input(input)?;
 
-    let res = check_distributions(&weights, 4).ok_or(ERR_NO_SOLUTION)?;
+    let res = check_distributions(&weights, 4)
+        .ok_or_else(|| AoCError::NoSolutionFoundError(
+            "No solution do distribute the presents found.".to_string()))?;
 
     Ok(res.to_string())
 }
@@ -99,7 +104,7 @@ impl Distribution {
 
     fn add(&mut self, index: usize) {
         assert!(index < self.weights.len());
-        assert_eq!(self.active[index], false);
+        assert!(!self.active[index]);
 
         self.active[index] = true;
         self.count += 1;
@@ -144,16 +149,16 @@ impl Distribution {
 
 
 
-fn parse_input(input: &Vec<String>) -> Result<Vec<u128>, &str> {
+fn parse_input(input: &[String]) -> Result<Vec<u128>, AoCError<String>> {
     let mut res = vec![];
     for line in input.iter() {
-        res.push(line.parse().map_err(|_| ERR_INPUT_MALFORMED)?)
+        res.push(line.parse()
+            .map_err(|e| AoCError::BadInputFormat(
+                format!("Parsing line failed. Only a number is expected, found '{}'\n{}", line, e))
+            )?)
     }
     Ok(res)
 }
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_NO_SOLUTION: &str = "No solution was found";
 
 #[cfg(test)]
 mod test {
