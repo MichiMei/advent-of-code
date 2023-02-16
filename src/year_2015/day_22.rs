@@ -1,19 +1,26 @@
 use std::collections::HashSet;
+use crate::errors::AoCError;
 use crate::year_2015::lib_2015::Character;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let player = Character::new(50, 0, 0);
-    let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
+    let boss = Character::from_input(input)
+        .ok_or_else(|| AoCError::BadInputFormat("Parsing boss failed.".to_string()))?;
     let round = Round::new(player, boss, 500, false);
-    let res = get_min_mana(round).ok_or(ERR_NO_POSSIBILITY_FOUND)?;
+    let res = get_min_mana(round)
+        .ok_or_else(|| AoCError::NoSolutionFoundError(
+            "No solution to beat the boss was found".to_string()))?;
     Ok(res.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let player = Character::new(50, 0, 0);
-    let boss = Character::from_input(input).ok_or(ERR_INPUT_MALFORMED)?;
+    let boss = Character::from_input(input)
+        .ok_or_else(|| AoCError::BadInputFormat("Parsing boss failed.".to_string()))?;
     let round = Round::new(player, boss, 500, true);
-    let res = get_min_mana(round).ok_or(ERR_NO_POSSIBILITY_FOUND)?;
+    let res = get_min_mana(round)
+        .ok_or_else(|| AoCError::NoSolutionFoundError(
+            "No solution to beat the boss was found".to_string()))?;
     Ok(res.to_string())
 }
 
@@ -256,9 +263,6 @@ impl Wizard {
 const SHIELD: usize = 0;
 const POISON: usize = 1;
 const RECHARGE: usize = 2;
-
-const ERR_INPUT_MALFORMED: &str = "Input string is malformed";
-const ERR_NO_POSSIBILITY_FOUND: &str = "No possible solution was found";
 
 #[cfg(test)]
 mod test {
