@@ -72,6 +72,20 @@ pub fn read_lines_untrimmed_from_stdin() -> Vec<String> {
     res
 }
 
+pub mod output {
+    pub fn bool_slice_to_string(slice: &[bool]) -> String {
+        let mut output = String::new();
+        for b in slice.iter() {
+            if *b {
+                output = format!("{}#", output);
+            } else {
+                output = format!("{}.", output);
+            }
+        }
+        output
+    }
+}
+
 pub mod errors {
     use std::error::Error;
     use std::fmt::{Debug, Display, Formatter};

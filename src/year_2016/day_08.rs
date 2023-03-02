@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use crate::errors::AoCError;
+use crate::output::bool_slice_to_string;
 
 pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     let mut screen = Screen::new(50, 6);
@@ -83,13 +84,7 @@ impl Screen {
 impl Display for Screen {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for line in self.pixels.iter() {
-            for elem in line.iter() {
-                if *elem {
-                    write!(f, "#").unwrap();
-                } else {
-                    write!(f, ".").unwrap();
-                }
-            }
+            write!(f, "{}", bool_slice_to_string(line)).unwrap();
             writeln!(f).unwrap();
         }
         write!(f, "")

@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::mem::swap;
 use crate::errors::AoCError;
+use crate::output::bool_slice_to_string;
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut lights = Lights::from(input)?;
@@ -150,13 +151,7 @@ impl Lights {
 impl Display for Lights {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for line in self.grid.iter() {
-            for elem in line.iter() {
-                if *elem {
-                    write!(f, "#").unwrap();
-                } else {
-                    write!(f, ".").unwrap();
-                }
-            }
+            write!(f, "{}", bool_slice_to_string(line)).unwrap();
             writeln!(f).unwrap();
         }
         writeln!(f)
