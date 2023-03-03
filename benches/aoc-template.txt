@@ -6,7 +6,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use advent_of_code::read_lines_untrimmed_from_file;
 use advent_of_code::year_20XX::*;   // TODO add year
 
-const INPUT_FOLDER: &str = "input/year20XX/";   // TODO add year
+const INPUT_FOLDER: &str = "input/year_20XX/";   // TODO add year
 
 fn day_01_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_01.txt";
