@@ -140,40 +140,6 @@ impl<'a> MD5Cache<'a> {
             let res = handle.join().expect("The treads should not panic");
             self.cache.extend(res);
         }
-
-        /*while index >= self.cache.len() {
-            let str = format!("{}{}", self.salt, self.cache.len());
-            let hash_str = if self.key_stretching {
-                let mut tmp = str;
-                for _ in 0..2017 {
-                    tmp = hash(&tmp).iter()
-                        .map(|b| format!("{:02x}", b)).collect::<String>();
-                }
-                tmp
-            } else {
-                hash(&str).iter().map(|b| format!("{:02x}", b)).collect::<String>()
-            };
-            let mut chars = hash_str.chars();
-            let mut triplets = None;
-            let mut quintuplet = HashSet::new();
-            let mut prev = chars.next().expect("hash has 32 chars");
-            let mut count = 1;
-            for elem in chars {
-                if elem == prev {
-                    count += 1;
-                    if count == 3 && triplets.is_none() {
-                        triplets = Some(prev);
-                    }
-                    if count == 5 {
-                        quintuplet.insert(prev);
-                    }
-                } else {
-                    prev = elem;
-                    count = 1;
-                }
-            }
-            self.cache.push((triplets, quintuplet))
-        }*/
     }
 }
 
