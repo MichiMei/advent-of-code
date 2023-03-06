@@ -1,11 +1,15 @@
 pub mod assembunny {
+    use std::collections::hash_map::DefaultHasher;
+    use std::collections::HashMap;
     use std::fmt::{Display, Formatter};
+    use std::hash::{Hash, Hasher};
     use crate::errors::AoCError;
 
     pub struct AssembunnySimulator {
         instructions: Vec<Instruction>,
         registers: [i32; 4],
         instruction_pointer: usize,
+        output: Vec<i32>,
     }
 
     impl AssembunnySimulator {
@@ -15,7 +19,8 @@ pub mod assembunny {
                 .collect::<Result<Vec<_>, _>>()?;
             let registers = [0; 4];
             let instruction_pointer = 0;
-            Ok(Self{instructions, registers, instruction_pointer})
+            let output = vec![];
+            Ok(Self{instructions, registers, instruction_pointer, output})
         }
 
         pub fn set_registers(&mut self, registers: [i32; 4]) {
@@ -24,29 +29,61 @@ pub mod assembunny {
 
         pub fn run(&mut self) -> [i32; 4] {
             while self.instruction_pointer < self.instructions.len() {
-                let (ip_change, toggle) =
-                    self.instructions[self.instruction_pointer]
-                        .execute(&mut self.registers);
-                if let Some(toggle) = toggle {
-                    let toggle_index = self.instruction_pointer as i64 + toggle as i64;
-                    if let Ok(index) = usize::try_from(toggle_index) {
-                        if index < self.instructions.len() {
-                            self.instructions[index] = self.instructions[index].toggle();
-                        }
-                    }
+                if !self.step() {
+                    break
                 }
-                let new_ip = self.instruction_pointer as i64 + ip_change as i64;
-                self.instruction_pointer = if let Ok(val) = usize::try_from(new_ip) {
-                    val
-                } else {
-                    break;
-                };
             }
             self.registers
         }
 
+        pub fn run_until_loop(&mut self) -> ([i32; 4], &[i32], Option<usize>) {
+            let mut state_cache = HashMap::new();
+
+            while self.instruction_pointer < self.instructions.len() {
+                let current_state = self.get_state();
+                if let Some(prev_output_length) = state_cache.get(&current_state) {
+                    return (self.registers, &self.output, Some(*prev_output_length))
+                }
+                state_cache.insert(current_state, self.output.len());
+
+                if !self.step() {
+                    break
+                }
+            }
+            (self.registers, &self.output, None)
+        }
+
         pub fn optimize(&mut self) {
             optimize_instructions(&mut self.instructions);
+        }
+
+        fn step(&mut self) -> bool {
+            let (ip_change, toggle) =
+                self.instructions[self.instruction_pointer]
+                    .execute(&mut self.registers, &mut self.output);
+            if let Some(toggle) = toggle {
+                let toggle_index = self.instruction_pointer as i64 + toggle as i64;
+                if let Ok(index) = usize::try_from(toggle_index) {
+                    if index < self.instructions.len() {
+                        self.instructions[index] = self.instructions[index].toggle();
+                    }
+                }
+            }
+            let new_ip = self.instruction_pointer as i64 + ip_change as i64;
+            self.instruction_pointer = if let Ok(val) = usize::try_from(new_ip) {
+                val
+            } else {
+                return false
+            };
+            true
+        }
+
+        fn get_state(&self) -> (u64, Vec<i32>, usize) {
+            let mut hasher = DefaultHasher::new();
+            self.instructions.hash(&mut hasher);
+            let i_hash = hasher.finish();
+
+            (i_hash, self.registers.to_vec(), self.instruction_pointer)
         }
     }
 
@@ -162,7 +199,7 @@ pub mod assembunny {
         }
     }
 
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Hash)]
     enum Instruction {
         Copy(Parameter, Parameter),
         Increment(Parameter),
@@ -171,6 +208,7 @@ pub mod assembunny {
         Toggle(Parameter),
         Transfer(Parameter, Parameter, i32),
         Multiply(Parameter, Parameter, Parameter, i32),
+        Output(Parameter),
     }
 
     impl Instruction {
@@ -224,6 +262,15 @@ pub mod assembunny {
                         Parameter::parse(words[1])?
                     ))
                 }
+                "out" => {
+                    if words.len() != 2 {
+                        return Err(AoCError::BadInputFormat(format!(
+                            "Instruction malformed, expected 'out <param>'. Found '{}'", line)))
+                    }
+                    Ok(Self::Output(
+                        Parameter::parse(words[1])?
+                    ))
+                }
                 x => {
                     return Err(AoCError::BadInputFormat(format!(
                         "Unknown instruction, expected 'cpy', 'inc', 'dec' or 'jnz'. Found '{}'", x)))
@@ -236,7 +283,8 @@ pub mod assembunny {
         /// Usually the change is 1, for jnz it may differ.
         /// The toggle value is None for all instructions except toggle. toggle returns a change
         /// relative to the current instruction pointer, indicating which operation to toggle.
-        pub fn execute(&self, registers: &mut [i32; 4]) -> (i32, Option<i32>) {
+        pub fn execute(&self, registers: &mut [i32; 4], output: &mut Vec<i32>)
+            -> (i32, Option<i32>) {
             let mut ip_change = 1;
             let mut toggle = None;
             match self {
@@ -298,6 +346,9 @@ pub mod assembunny {
                     }
                     ip_change = *jump;
                 }
+                Instruction::Output(val) => {
+                    output.push(val.get_value(registers));
+                }
             }
             (ip_change, toggle)
         }
@@ -319,6 +370,7 @@ pub mod assembunny {
                 Instruction::Toggle(p) => Instruction::Increment(p),
                 Instruction::Transfer(_, _, _) => unimplemented!("transfer cant be toggled"),
                 Instruction::Multiply(_, _, _, _) => unimplemented!("transfer cant be toggled"),
+                Instruction::Output(p) => Instruction::Increment(p),
             }
         }
 
@@ -379,11 +431,12 @@ pub mod assembunny {
                     write!(f, "TRANSFER {} {} {}", p0, p1, j),
                 Instruction::Multiply(op0, op1, dest, j) =>
                     write!(f, "MULTIPLY {}*{}->{} {}", op0, op1, dest, j),
+                Instruction::Output(p) => write!(f, "out {}", p),
             }
         }
     }
 
-    #[derive(Copy, Clone, Eq, PartialEq)]
+    #[derive(Copy, Clone, Eq, PartialEq, Hash)]
     enum Parameter {
         Register(usize),
         Value(i32),

@@ -163,7 +163,7 @@ fn run_2015() -> io::Result<()> {
 fn run_2016() -> io::Result<()> {
     let year = "2016";
     let input_folder = format!("input/year_{}/", year);
-
+/*
     // day 01
     let input_name = input_folder.to_string() + "/input_day_01.txt";
     let input = read_lines_untrimmed_from_file(&input_name)?;
@@ -307,13 +307,13 @@ fn run_2016() -> io::Result<()> {
     let input = read_lines_untrimmed_from_file(&input_name)?;
     println!("y{}-d24_p1: {}", year, year_2016::day_24::part_1(&input).unwrap());
     println!("y{}-d24_p2: {}", year, year_2016::day_24::part_2(&input).unwrap());
-/*
+*/
     // day25
     let input_name = input_folder.to_string() + "/input_day_25.txt";
     let input = read_lines_untrimmed_from_file(&input_name)?;
     println!("y{}-d25_p1: {}", year, year_2016::day_25::part_1(&input).unwrap());
     println!("y{}-d25_p2: {}", year, year_2016::day_25::part_2(&input).unwrap());
-     */
+
     Ok(())
 }
 
