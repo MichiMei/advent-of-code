@@ -1,5 +1,5 @@
 use std::io;
-use advent_of_code::{read_lines_untrimmed_from_file, year_2015, year_2016};
+use advent_of_code::{read_lines_untrimmed_from_file, year_2015, year_2016, year_2017};
 
 
 #[allow(dead_code)]

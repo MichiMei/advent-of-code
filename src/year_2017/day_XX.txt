@@ -20,7 +20,7 @@ mod test {
 
     #[test]
     fn check_input_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2016/input_day_XX.txt";    // TODO
+        let input_name = "input/year_2017/input_day_XX.txt";    // TODO
         let input = read_lines_untrimmed_from_file(input_name)?;
 
         assert_eq!(part_1(&input), Ok("expected".to_string())); // TODO
@@ -34,7 +34,7 @@ mod test {
 
     #[test]
     fn check_input_part_2() -> std::io::Result<()> {
-        let input_name = "input/year_2016/input_day_XX.txt";    // TODO
+        let input_name = "input/year_2017/input_day_XX.txt";    // TODO
         let input = read_lines_untrimmed_from_file(input_name)?;
 
         assert_eq!(part_2(&input), Ok("expected".to_string())); // TODO
