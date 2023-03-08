@@ -84,7 +84,7 @@ fn day_05_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 05 part 2", |b| b.iter(|| day_05::part_2(&input)));
 }
 
-/*fn day_06_part_1_benchmark(c: &mut Criterion) {
+fn day_06_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_06.txt";
     let input = read_lines_untrimmed_from_file(&input_name)
         .expect("Reading file failed");
@@ -98,7 +98,7 @@ fn day_06_part_2_benchmark(c: &mut Criterion) {
         .expect("Reading file failed");
 
     c.bench_function("Bench day 06 part 2", |b| b.iter(|| day_06::part_2(&input)));
-}*/
+}
 
 /*fn day_07_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_07.txt";
@@ -414,9 +414,9 @@ criterion_group!(benches_2017,
     day_04_part_1_benchmark,
     day_04_part_2_benchmark,
     day_05_part_1_benchmark,
-    day_05_part_2_benchmark/*,
+    day_05_part_2_benchmark,
     day_06_part_1_benchmark,
-    day_06_part_2_benchmark,
+    day_06_part_2_benchmark/*,
     day_07_part_1_benchmark,
     day_07_part_2_benchmark,
     day_08_part_1_benchmark,

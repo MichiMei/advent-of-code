@@ -13,7 +13,8 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
 fn parse_numbers(input: &[String]) -> Result<Vec<i32>, AoCError<String>> {
     input.iter()
         .map(|line| line.parse()).collect::<Result<Vec<_>, _>>()
-        .map_err(|e| AoCError::BadInputFormat(format!("Parsing input number failed. {}", e)))
+        .map_err(|e| AoCError::BadInputFormat(
+            format!("Parsing input numbers failed. {}", e)))
 }
 
 fn execute_jumps_part_1(mut jumps: Vec<i32>) -> usize {
