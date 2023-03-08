@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use crate::errors::AoCError;
 
 pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
