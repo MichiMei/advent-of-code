@@ -407,13 +407,13 @@ fn run_2017() -> io::Result<()> {
     let input = read_lines_untrimmed_from_file(&input_name)?;
     println!("y{}-d14_p1: {}", year, day_14::part_1(&input).unwrap());
     println!("y{}-d14_p2: {}", year, day_14::part_2(&input).unwrap());
-/*
+
     // day15
     let input_name = input_folder.to_string() + "/input_day_15.txt";
     let input = read_lines_untrimmed_from_file(&input_name)?;
     println!("y{}-d15_p1: {}", year, day_15::part_1(&input).unwrap());
     println!("y{}-d15_p2: {}", year, day_15::part_2(&input).unwrap());
-
+/*
     // day16
     let input_name = input_folder.to_string() + "/input_day_16.txt";
     let input = read_lines_untrimmed_from_file(&input_name)?;

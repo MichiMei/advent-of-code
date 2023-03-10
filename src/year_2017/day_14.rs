@@ -29,8 +29,7 @@ fn calculate_disk_hash(key_string: &str, disk_index: usize) -> Vec<u8> {
     let input = format!("{}-{}", key_string, disk_index);
     let mut knot_hash = KnotHash::new(255);
     knot_hash.complete_hash(&input);
-    let hash = knot_hash.get_dense_hash_bytes();
-    hash
+    knot_hash.get_dense_hash_bytes()
 }
 
 fn count_used_in_row(hash: &[u8]) -> u32 {
