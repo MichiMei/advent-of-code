@@ -1,6 +1,5 @@
-use std::fmt::{Display, Formatter};
-use std::ops::BitXor;
 use crate::errors::AoCError;
+use crate::year_2017::lib_2017::knot_hash::KnotHash;
 
 pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     if input.len() != 1 {
@@ -9,7 +8,10 @@ pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
     }
     let numbers = parse_numbers(&input[0])?;
     let mut knot_hash = KnotHash::new(255);
-    execute_hash_list(&mut knot_hash, &numbers).map(|res| res.to_string())
+    knot_hash.execute_list(&numbers);
+    knot_hash.get_start_product()
+        .map(|res| res.to_string())
+        .ok_or_else(|| AoCError::NoSolutionFoundError("Hash-Length < 2".to_string()))
 }
 
 pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
@@ -17,7 +19,9 @@ pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
         return Err(AoCError::UnexpectedInputLength(
             "Expected a single line containing a list of hash lengths.".to_string()))
     }
-    Ok(complete_hash(&input[0]))
+    let mut knot_hash = KnotHash::new(255);
+    knot_hash.complete_hash(&input[0]);
+    Ok(knot_hash.get_dense_hash())
 }
 
 fn parse_numbers(line: &str) -> Result<Vec<usize>, AoCError<String>> {
@@ -28,81 +32,6 @@ fn parse_numbers(line: &str) -> Result<Vec<usize>, AoCError<String>> {
         .collect()
 }
 
-fn complete_hash(line: &str) -> String{
-    let mut knot_hash = KnotHash::new(255);
-    let hash_length_list = str_to_hash_length_list(line);
-    for _ in 0..64 {
-        _ = execute_hash_list(&mut knot_hash, &hash_length_list);
-    }
-    knot_hash.get_dense_hash()
-}
-
-fn str_to_hash_length_list(str: &str) -> Vec<usize> {
-    let mut res = str.chars().map(|c| c as u8 as usize).collect::<Vec<_>>();
-    res.extend([17, 31, 73, 47, 23]);
-    res
-}
-
-fn execute_hash_list(knot_hash: &mut KnotHash, numbers: &Vec<usize>) -> Result<usize, AoCError<String>> {
-    for number in numbers {
-        knot_hash.hash(*number);
-    }
-    knot_hash.get_start_product()
-        .ok_or_else(|| AoCError::NoSolutionFoundError("Hash-Length < 2".to_string()))
-}
-
-struct KnotHash {
-    numbers: Vec<u8>,
-    position: usize,
-    skip_size: usize,
-}
-
-impl KnotHash {
-    fn new(len: u8) -> Self {
-        let numbers = (0u8..=len).collect();
-        let position = 0;
-        let skip_size = 0;
-        Self{numbers, position, skip_size}
-    }
-
-    fn hash(&mut self, len: usize) {
-        let normalized = self.numbers[self.position..].iter().copied().chain(self.numbers[0..self.position].iter().copied()).collect::<Vec<_>>();
-        let mut rotated = normalized[0..len].to_vec();
-        rotated.reverse();
-        rotated.extend(&normalized[len..]);
-        self.numbers = rotated[rotated.len()-self.position..].iter().copied().chain(rotated[0..rotated.len()-self.position].iter().copied()).collect();
-        self.position = (self.position+len+self.skip_size)%self.numbers.len();
-        self.skip_size += 1;
-    }
-
-    fn get_start_product(&self) -> Option<usize> {
-        if self.numbers.len() < 2 {
-            return None
-        }
-        Some(self.numbers[0] as usize * self.numbers[1] as usize)
-    }
-
-    fn get_dense_hash(&self) -> String {
-        self.numbers
-            .chunks_exact(16)
-            .map(|bytes| bytes[1..]
-                .iter().
-                fold(bytes[0], |acc, b| acc.bitxor(b)))
-            .map(|b| format!("{:02x}", b))
-            .collect()
-    }
-}
-
-impl Display for KnotHash {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut str = format!("pos({}) skip_size({}) ", self.position, self.skip_size);
-        for elem in self.numbers.iter() {
-            str = format!("{}{} ", str, elem);
-        }
-        write!(f, "{}", str)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use crate::read_lines_untrimmed_from_file;
@@ -111,7 +40,8 @@ mod test {
     #[test]
     fn check_examples_part_1() {
         let mut knot_hash = KnotHash::new(4);
-        assert_eq!(execute_hash_list(&mut knot_hash, &vec![3, 4, 1, 5]), Ok(12));
+        knot_hash.execute_list(&vec![3, 4, 1, 5]);
+        assert_eq!(knot_hash.get_start_product(), Some(12));
     }
 
     #[test]
