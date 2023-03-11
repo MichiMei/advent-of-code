@@ -1,5 +1,5 @@
-use std::mem::swap;
 use crate::errors::AoCError;
+use crate::string_manipulation::*;
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let instructions = parse_instructions(input)?;
@@ -93,7 +93,7 @@ impl Instruction {
                     "Malformed 'rotate [left|right]', expected 'rotate [left|right] <steps> \
                     steps', found '{}'", line)))
             }
-            let dir = Direction::parse(words[1])?;
+            let dir = parse_direction(words[1])?;
             let steps = words[2].parse().map_err(|e| AoCError::BadInputFormat(
                 format!("Parsing 'rotate [left|right]' steps failed, expected number, found '{}'. \
                 {}", words[2], e)))?;
@@ -170,137 +170,12 @@ impl Instruction {
     }
 }
 
-fn swap_positions(str: &str, mut src: usize, mut dest: usize) -> Result<String, AoCError<String>> {
-    if src > dest {
-        swap(&mut src, &mut dest);
-    }
-    if src >= str.len() {
-        return Err(AoCError::BadInputFormat(format!("Swap positions src index out of bounds. \
-        Password length {}, index {}", str.len(), src)))
-    }
-    if dest >= str.len() {
-        return Err(AoCError::BadInputFormat(format!("Swap positions dest index out of bounds. \
-        Password length {}, index {}", str.len(), dest)))
-    }
-    Ok(format!("{}{}{}{}{}",
-            &str[0..src],
-            &str[dest..dest+1],
-            &str[src+1..dest],
-            &str[src..src+1],
-            &str[dest+1..]))
-}
-
-fn swap_letters(str: &str, char_x: char, char_y: char) -> String {
-    let mut pattern = "#".to_string();
-    while str.contains(&pattern) {
-        pattern = format!("{}#", pattern);
-    }
-    let mut res = str.replace(char_x, &pattern);
-    res = res.replace(char_y, &char_x.to_string());
-    res.replace(&pattern, &char_y.to_string())
-}
-
-fn rotate_steps(str: &str, dir: Direction, mut steps: usize) -> String {
-    steps %= str.len();
-    if dir == Direction::Right {
-        steps = (str.len() - steps) % str.len();
-    }
-
-    format!("{}{}", &str[steps..], &str[0..steps])
-}
-
-fn rotate_char_based(str: &str, char: char) -> Result<String, AoCError<String>> {
-    let index = str.find(char)
-        .ok_or_else(|| AoCError::BadInputFormat(format!("Char {} for char based rotating is not \
-        contained in the password", char)))?;
-    let steps = calculate_rotate_steps(index);
-    Ok(rotate_steps(str, Direction::Right, steps))
-}
-
-fn reverse(str: &str, index_start: usize, index_end: usize) -> Result<String, AoCError<String>> {
-    if index_start >= str.len() {
-        return Err(AoCError::BadInputFormat(format!("Reverse index_start out of bounds. \
-        Password length {}, index {}", str.len(), index_start)))
-    }
-    if index_end >= str.len() {
-        return Err(AoCError::BadInputFormat(format!("Reverse index_end out of bounds. \
-        Password length {}, index {}", str.len(), index_end)))
-    }
-    Ok(format!("{}{}{}",
-               &str[0..index_start],
-               &str[index_start..=index_end].chars().rev().collect::<String>(),
-               &str[index_end+1..]))
-}
-
-fn move_char(str: &str, src: usize, dest: usize) -> Result<String, AoCError<String>> {
-    if src >= str.len() {
-        return Err(AoCError::BadInputFormat(format!("Move src index out of bounds. \
-        Password length {}, index {}", str.len(), src)))
-    }
-    if dest >= str.len() {
-        return Err(AoCError::BadInputFormat(format!("Move dest index out of bounds. \
-        Password length {}, index {}", str.len(), dest)))
-    }
-
-    let mut chars = str.chars().collect::<Vec<_>>();
-    let char = chars.remove(src);
-    chars.insert(dest, char);
-    Ok(chars.iter().collect())
-}
-
-fn reverse_rotate_char_based(str: &str, char: char) -> Result<String, AoCError<String>> {
-    let char_index = str.find(char)
-        .ok_or_else(|| AoCError::BadInputFormat(format!("Char {} for char based rotating is not \
-        contained in the password", char)))?;
-    let mut steps = None;
-    for try_index in 0..str.len() {
-        let try_steps = calculate_rotate_steps(try_index);
-        if (try_index+ try_steps) % str.len() == char_index {
-            if steps.is_none() {
-                steps = Some(try_steps);
-            } else {
-                return Err(AoCError::BadInputFormat(
-                    "Char based rotating could not be reversed".to_string()))
-            }
-        }
-    }
-    if let Some(steps) = steps {
-        Ok(rotate_steps(str, Direction::Left, steps))
-    } else {
-        Err(AoCError::BadInputFormat(
-            "Reversing char based rotating is impossible".to_string()))
-    }
-}
-
-fn calculate_rotate_steps(char_index: usize) -> usize {
-    if char_index >= 4 {
-        char_index+2
-    } else {
-        char_index+1
-    }
-}
-
-#[derive(Eq, PartialEq, Copy, Clone)]
-enum Direction {
-    Left,
-    Right,
-}
-
-impl Direction {
-    pub fn parse(str: &str) -> Result<Direction, AoCError<String>> {
-        match str {
-            "left" => Ok(Self::Left),
-            "right" => Ok(Self::Right),
-            _ => Err(AoCError::BadInputFormat(format!("Parsing direction failed, expected 'left' or \
-                    'right', found {}", str))),
-        }
-    }
-
-    pub fn reverse(self) -> Self {
-        match self {
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-        }
+pub fn parse_direction(str: &str) -> Result<Direction, AoCError<String>> {
+    match str {
+        "left" => Ok(Direction::Left),
+        "right" => Ok(Direction::Right),
+        _ => Err(AoCError::BadInputFormat(format!("Parsing direction failed, expected 'left' or \
+        'right', found {}", str))),
     }
 }
 
