@@ -103,7 +103,7 @@ impl Iterator for RandomGenerator {
         if self.counter.is_some() && self.counter.unwrap() == 0 {
             return None
         }
-        self.counter.map(|c| c-1);
+        self.counter = self.counter.map(|c| c-1);
         let next = (self.prev * self.factor) % self.modulo;
         self.prev = next;
         Some(next)
