@@ -1,4 +1,5 @@
-use std::ops::AddAssign;
+use std::collections::HashMap;
+use std::ops::{AddAssign, Sub};
 use crate::errors::AoCError;
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
@@ -17,7 +18,16 @@ pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
 }
 
 pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
-    todo!()
+    let mut particles = parse_particles(input)?;
+    particles = remove_collisions(particles);
+    loop {
+        step_particles(&mut particles);
+        particles = remove_collisions(particles);
+        if finished(&particles) {
+            break
+        }
+    }
+    Ok(particles.len().to_string())
 }
 
 fn parse_particles(input: &[String]) -> Result<Vec<Particle>, AoCError<String>> {
@@ -53,6 +63,33 @@ fn get_min_secondary_coordinate(mut particles: Vec<Particle>, secondary: fn(&Par
         .filter(|p|
             secondary(p).normalized_unified_value(&primary(p)) == min_secondary)
         .collect()
+}
+
+fn remove_collisions(particles: Vec<Particle>) -> Vec<Particle> {
+    let mut counts = HashMap::new();
+    for particle in particles.iter() {
+        let count = counts.get(&particle.position).unwrap_or(&0);
+        counts.insert(particle.position, count+1);
+    }
+    particles.into_iter().filter(|p| counts.get(&p.position) == Some(&1)).collect()
+}
+
+fn step_particles(particles: &mut [Particle]) {
+    particles.iter_mut().for_each(Particle::step)
+}
+
+fn finished(particles: &[Particle]) -> bool {
+    for (index, p0) in particles.iter().enumerate() {
+        for p1 in particles[index+1..].iter() {
+            let new_dist = p0.position.distance(&p1.position);
+            let old_dist =
+                (p0.position- p0.velocity).distance(&(p1.position- p1.velocity));
+            if old_dist > new_dist {
+                return false
+            }
+        }
+    }
+    true
 }
 
 #[derive(Debug)]
@@ -150,6 +187,12 @@ impl Coordinate {
         };
         x + y + z
     }
+
+    fn distance(&self, other: &Self) -> u32 {
+        self.x.abs_diff(other.x) +
+            self.y.abs_diff(other.y) +
+            self.z.abs_diff(other.z)
+    }
 }
 
 impl AddAssign for Coordinate {
@@ -157,6 +200,17 @@ impl AddAssign for Coordinate {
         self.x += rhs.x;
         self.y += rhs.y;
         self.z += rhs.z;
+    }
+}
+
+impl Sub for Coordinate {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let x = self.x-rhs.x;
+        let y = self.y-rhs.y;
+        let z = self.z-rhs.z;
+        Self{x, y, z}
     }
 }
 
@@ -208,7 +262,7 @@ mod test {
         let input_name = "input/year_2017/input_day_20.txt";
         let input = read_lines_untrimmed_from_file(input_name)?;
 
-        assert_eq!(part_2(&input), Ok("expected".to_string())); // TODO
+        assert_eq!(part_2(&input), Ok("420".to_string()));
         Ok(())
     }
 }
