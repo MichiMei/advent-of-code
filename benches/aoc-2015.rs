@@ -2,7 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use advent_of_code::read_lines_untrimmed_from_file;
 use advent_of_code::year_2015::*;
 
-const INPUT_FOLDER: &str = "input/year2015/";
+const INPUT_FOLDER: &str = "input/year_2015/";
 
 fn day_01_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_01.txt";
@@ -404,24 +404,6 @@ fn day_25_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 25 part 2", |b| b.iter(|| day_25::part_2(&input)));
 }
 
-/*
-fn day_XX_part_1_benchmark(c: &mut Criterion) { // TODO
-    let input_name = INPUT_FOLDER.to_string() + "input_day_XX.txt";    // TODO
-    let input = read_lines_untrimmed_from_file(&input_name)
-        .expect("Reading file failed");
-
-    c.bench_function("Bench day XX part 1", |b| b.iter(|| day_XX::part_1(&input))); // TODO 2x
-}
-
-fn day_XX_part_2_benchmark(c: &mut Criterion) { // TODO
-    let input_name = INPUT_FOLDER.to_string() + "input_day_XX.txt";    // TODO
-    let input = read_lines_untrimmed_from_file(&input_name)
-        .expect("Reading file failed");
-
-    c.bench_function("Bench day XX part 2", |b| b.iter(|| day_XX::part_2(&input))); // TODO 2x
-}
- */
-
 criterion_group!(benches_2015,
     day_01_part_1_benchmark,
     day_01_part_2_benchmark,
@@ -473,10 +455,6 @@ criterion_group!(benches_2015,
     day_24_part_2_benchmark,
     day_25_part_1_benchmark,
     day_25_part_2_benchmark
-    /*
-    day_XX_part_1_benchmark,    // TODO
-    day_XX_part_2_benchmark     // TODO
-     */
 );
 
 criterion_main!(benches_2015);

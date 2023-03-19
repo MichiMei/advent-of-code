@@ -12,7 +12,7 @@ pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     Ok(res.to_string())
 }
 
-pub fn part_2(_: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(_: &[String]) -> Result<String, AoCError<String>> {
     Ok("Merry Christmas!".to_string())
 }
 

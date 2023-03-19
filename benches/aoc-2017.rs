@@ -1,8 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use advent_of_code::read_lines_untrimmed_from_file;
-use advent_of_code::year_2016::*;
+use advent_of_code::year_2017::*;
 
-const INPUT_FOLDER: &str = "input/year_2016/";
+const INPUT_FOLDER: &str = "input/year_2017/";
 
 fn day_01_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_01.txt";
@@ -340,7 +340,7 @@ fn day_21_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 21 part 2", |b| b.iter(|| day_21::part_2(&input)));
 }
 
-fn day_22_part_1_benchmark(c: &mut Criterion) {
+/*fn day_22_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_22.txt";
     let input = read_lines_untrimmed_from_file(&input_name)
         .expect("Reading file failed");
@@ -354,9 +354,9 @@ fn day_22_part_2_benchmark(c: &mut Criterion) {
         .expect("Reading file failed");
 
     c.bench_function("Bench day 22 part 2", |b| b.iter(|| day_22::part_2(&input)));
-}
+}*/
 
-fn day_23_part_1_benchmark(c: &mut Criterion) {
+/*fn day_23_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_23.txt";
     let input = read_lines_untrimmed_from_file(&input_name)
         .expect("Reading file failed");
@@ -370,9 +370,9 @@ fn day_23_part_2_benchmark(c: &mut Criterion) {
         .expect("Reading file failed");
 
     c.bench_function("Bench day 23 part 2", |b| b.iter(|| day_23::part_2(&input)));
-}
+}*/
 
-fn day_24_part_1_benchmark(c: &mut Criterion) {
+/*fn day_24_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_24.txt";
     let input = read_lines_untrimmed_from_file(&input_name)
         .expect("Reading file failed");
@@ -386,9 +386,9 @@ fn day_24_part_2_benchmark(c: &mut Criterion) {
         .expect("Reading file failed");
 
     c.bench_function("Bench day 24 part 2", |b| b.iter(|| day_24::part_2(&input)));
-}
+}*/
 
-fn day_25_part_1_benchmark(c: &mut Criterion) {
+/*fn day_25_part_1_benchmark(c: &mut Criterion) {
     let input_name = INPUT_FOLDER.to_string() + "input_day_25.txt";
     let input = read_lines_untrimmed_from_file(&input_name)
         .expect("Reading file failed");
@@ -402,9 +402,9 @@ fn day_25_part_2_benchmark(c: &mut Criterion) {
         .expect("Reading file failed");
 
     c.bench_function("Bench day 25 part 2", |b| b.iter(|| day_25::part_2(&input)));
-}
+}*/
 
-criterion_group!(benches_2016,
+criterion_group!(benches_2017,
     day_01_part_1_benchmark,
     day_01_part_2_benchmark,
     day_02_part_1_benchmark,
@@ -446,7 +446,7 @@ criterion_group!(benches_2016,
     day_20_part_1_benchmark,
     day_20_part_2_benchmark,
     day_21_part_1_benchmark,
-    day_21_part_2_benchmark,
+    day_21_part_2_benchmark/*,
     day_22_part_1_benchmark,
     day_22_part_2_benchmark,
     day_23_part_1_benchmark,
@@ -454,7 +454,7 @@ criterion_group!(benches_2016,
     day_24_part_1_benchmark,
     day_24_part_2_benchmark,
     day_25_part_1_benchmark,
-    day_25_part_2_benchmark
+    day_25_part_2_benchmark*/
 );
 
-criterion_main!(benches_2016);
+criterion_main!(benches_2017);
