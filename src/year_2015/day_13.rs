@@ -125,10 +125,21 @@ mod test {
 
     #[test]
     fn check_examples_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2015/example_day_13.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
-        assert_eq!(part_1(&input), Ok("330".to_string()));
+        let v = vec![
+            "Alice would gain 54 happiness units by sitting next to Bob.".to_string(),
+            "Alice would lose 79 happiness units by sitting next to Carol.".to_string(),
+            "Alice would lose 2 happiness units by sitting next to David.".to_string(),
+            "Bob would gain 83 happiness units by sitting next to Alice.".to_string(),
+            "Bob would lose 7 happiness units by sitting next to Carol.".to_string(),
+            "Bob would lose 63 happiness units by sitting next to David.".to_string(),
+            "Carol would lose 62 happiness units by sitting next to Alice.".to_string(),
+            "Carol would gain 60 happiness units by sitting next to Bob.".to_string(),
+            "Carol would gain 55 happiness units by sitting next to David.".to_string(),
+            "David would gain 46 happiness units by sitting next to Alice.".to_string(),
+            "David would lose 7 happiness units by sitting next to Bob.".to_string(),
+            "David would gain 41 happiness units by sitting next to Carol.".to_string(),
+        ];
+        assert_eq!(part_1(&v), Ok("330".to_string()));
         Ok(())
     }
 
