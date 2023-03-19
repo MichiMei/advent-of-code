@@ -100,6 +100,7 @@ pub mod errors {
         NoSolutionFoundError(Message),
         MultipleSolutionsFoundError(Message),
         MultithreadingError(Message),
+        IOError(Message),
     }
 
     impl<Message: Debug + Display> Display for AoCError<Message> {
@@ -120,6 +121,9 @@ pub mod errors {
                 AoCError::MultithreadingError(message) => {
                     write!(f, "An error occurred while distributing the work to threads:\n{}",
                            message)
+                }
+                AoCError::IOError(message) => {
+                    write!(f, "Input/Output operation failed:\n{}", message)
                 }
             }
         }
@@ -336,5 +340,78 @@ pub mod string_manipulation {
         } else {
             char_index+1
         }
+    }
+}
+
+pub mod input {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader, Write};
+    use aoc_client::AocClient;
+    use crate::errors::AoCError;
+
+    pub fn get_input(year: u16, day: u8) -> Result<Vec<String>, AoCError<String>> {
+        let file_name = get_path(year, day)?;
+        let file = if let Ok(file) = File::open(&file_name) {
+            file
+        } else {
+            download(year, day)?;
+            File::open(&file_name)
+                .map_err(|e| AoCError::IOError(format!(
+                    "Opening just created file failed. {}", e)))?
+        };
+        read_from_file(file)
+    }
+
+    fn get_path(year: u16, day: u8) -> Result<String, AoCError<String>> {
+        if year < 2015 {
+            return Err(AoCError::IOError("AoC only started in 2015.".to_string()))
+        }
+        if day == 0 || day > 25 {
+            return Err(AoCError::IOError("Only days 1-25 supported.".to_string()))
+        }
+        Ok(format!("input/year_{}/input_day_{:02}.txt", year, day))
+    }
+
+    fn read_from_file(file: File) -> Result<Vec<String>, AoCError<String>> {
+        let reader = BufReader::new(file);
+        let lines = reader.lines();
+
+        let mut res = vec![];
+        for line in lines {
+            let line = line
+                .map_err(|e| AoCError::IOError(format!("Reading from file failed: {}", e)))?;
+            res.push(line);
+        }
+        Ok(res)
+    }
+
+    fn download(year: u16, day: u8) -> Result<(), AoCError<String>> {
+        let client = AocClient::builder()
+            .session_cookie_from_file("input/session_cookie")
+            .map_err(|e| AoCError::IOError(format!(
+                "Parsing session cookie failed: {}", e)))?
+            .year(year as i32)
+            .map_err(|e| AoCError::IOError(format!(
+                "Parsing year failed: {}", e)))?
+            .day(day as u32)
+            .map_err(|e| AoCError::IOError(format!(
+                "Parsing day failed: {}", e)))?
+            .build()
+            .map_err(|e| AoCError::IOError(format!(
+                "Building AocClient failed: {}", e)))?;
+
+        let input = client.get_input().map_err(|e| AoCError::IOError(format!(
+            "Retrieving puzzle input failed: {}", e)))?;
+        write_content_to_file(year, day, input)
+    }
+
+    fn write_content_to_file(year: u16, day: u8, content: String) -> Result<(), AoCError<String>> {
+        let path = get_path(year, day)?;
+        let mut file = File::create(&path)
+            .map_err(|e| AoCError::IOError(format!(
+                "Opening file '{}' failed: {}", path, e)))?;
+        file.write_all(content.as_bytes())
+            .map_err(|e| AoCError::IOError(format!("Writing to '{}' failed: {}", path, e)))?;
+        Ok(())
     }
 }
