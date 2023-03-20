@@ -1,6 +1,7 @@
 use std::collections::HashSet;
+use crate::errors::AoCError;
 
-pub fn part_1(input: &[String]) -> Result<String, &str> {
+pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     assert_eq!(input.len(), 1);
     let line = &input[0];
     let commands = Commands::new(line);
@@ -20,7 +21,7 @@ pub fn part_1(input: &[String]) -> Result<String, &str> {
     Ok(dist.to_string())
 }
 
-pub fn part_2(input: &[String]) -> Result<String, &str> {
+pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     assert_eq!(input.len(), 1);
     let line = &input[0];
     let commands = Commands::new(line);
@@ -143,7 +144,7 @@ const ERR_INPUT_MALFORMED: &str = "Input is malformed";
 
 #[cfg(test)]
 mod test {
-    use crate::read_lines_untrimmed_from_file;
+    use crate::input::get_input;
     use super::*;
 
     #[test]
@@ -154,10 +155,8 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2016/input_day_01.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_1() -> Result<(), AoCError<String>> {
+        let input = get_input(2016, 1)?;
         assert_eq!(part_1(&input), Ok("209".to_string()));
         Ok(())
     }
@@ -168,10 +167,8 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_2() -> std::io::Result<()> {
-        let input_name = "input/year_2016/input_day_01.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_2() -> Result<(), AoCError<String>> {
+        let input = get_input(2016, 1)?;
         assert_eq!(part_2(&input), Ok("136".to_string()));
         Ok(())
     }

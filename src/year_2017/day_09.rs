@@ -155,7 +155,7 @@ impl State {
 
 #[cfg(test)]
 mod test {
-    use crate::read_lines_untrimmed_from_file;
+    use crate::input::get_input;
     use super::*;
 
     #[test]
@@ -174,10 +174,8 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2017/input_day_09.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_1() -> Result<(), AoCError<String>> {
+        let input = get_input(2017, 9)?;
         assert_eq!(part_1(&input), Ok("7616".to_string()));
         Ok(())
     }
@@ -194,10 +192,8 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_2() -> std::io::Result<()> {
-        let input_name = "input/year_2017/input_day_09.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_2() -> Result<(), AoCError<String>> {
+        let input = get_input(2017, 9)?;
         assert_eq!(part_2(&input), Ok("3838".to_string()));
         Ok(())
     }

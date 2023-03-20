@@ -59,7 +59,7 @@ fn next_index((row, col): (usize, usize)) -> (usize, usize) {
 
 #[cfg(test)]
 mod test {
-    use crate::read_lines_untrimmed_from_file;
+    use crate::input::get_input;
     use super::*;
 
     const EXAMPLE_SOLUTIONS: [[i32; 6]; 6] = [
@@ -86,10 +86,8 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2015/input_day_25.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_1() -> Result<(), AoCError<String>> {
+        let input = get_input(2015, 25)?;
         assert_eq!(part_1(&input), Ok("19980801".to_string()));
         Ok(())
     }

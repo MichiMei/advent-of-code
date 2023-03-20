@@ -94,23 +94,19 @@ impl LASSequence {
 
 #[cfg(test)]
 mod test {
-    use crate::read_lines_untrimmed_from_file;
+    use crate::input::get_input;
     use super::*;
 
     #[test]
-    fn check_input_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2015/input_day_10.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_1() -> Result<(), AoCError<String>> {
+        let input = get_input(2015, 10)?;
         assert_eq!(part_1(&input), Ok("360154".to_string()));
         Ok(())
     }
 
     #[test]
-    fn check_input_part_2() -> std::io::Result<()> {
-        let input_name = "input/year_2015/input_day_10.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_2() -> Result<(), AoCError<String>> {
+        let input = get_input(2015, 10)?;
         assert_eq!(part_2(&input), Ok("5103798".to_string()));
         Ok(())
     }

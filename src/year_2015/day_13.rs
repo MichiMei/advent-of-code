@@ -120,11 +120,11 @@ impl Table {
 
 #[cfg(test)]
 mod test {
-    use crate::read_lines_untrimmed_from_file;
+    use crate::input::get_input;
     use super::*;
 
     #[test]
-    fn check_examples_part_1() -> std::io::Result<()> {
+    fn check_examples_part_1() -> Result<(), AoCError<String>> {
         let v = vec![
             "Alice would gain 54 happiness units by sitting next to Bob.".to_string(),
             "Alice would lose 79 happiness units by sitting next to Carol.".to_string(),
@@ -144,19 +144,15 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_1() -> std::io::Result<()> {
-        let input_name = "input/year_2015/input_day_13.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_1() -> Result<(), AoCError<String>> {
+        let input = get_input(2015, 13)?;
         assert_eq!(part_1(&input), Ok("618".to_string()));
         Ok(())
     }
 
     #[test]
-    fn check_input_part_2() -> std::io::Result<()> {
-        let input_name = "input/year_2015/input_day_13.txt";
-        let input = read_lines_untrimmed_from_file(input_name)?;
-
+    fn check_input_part_2() -> Result<(), AoCError<String>> {
+        let input = get_input(2015, 13)?;
         assert_eq!(part_2(&input), Ok("601".to_string()));
         Ok(())
     }
