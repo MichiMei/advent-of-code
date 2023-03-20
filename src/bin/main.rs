@@ -136,6 +136,7 @@ fn run_2015() -> Result<(), AoCError<String>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_2016() -> Result<(), AoCError<String>> {
     use year_2016::*;
     let year = 2016;
@@ -268,6 +269,7 @@ fn run_2016() -> Result<(), AoCError<String>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_2017() -> Result<(), AoCError<String>> {
     use year_2017::*;
     let year = 2017;
@@ -533,7 +535,7 @@ fn run_2017() -> Result<(), AoCError<String>> {
 }*/
 
 fn main() -> Result<(), AoCError<String>> {
-    run_2015()?;
-    run_2016()?;
+    // run_2015()?;
+    // run_2016()?;
     run_2017()
 }

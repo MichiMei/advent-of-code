@@ -344,8 +344,10 @@ pub mod string_manipulation {
 }
 
 pub mod input {
+    use std::fs;
     use std::fs::File;
     use std::io::{BufRead, BufReader, Write};
+    use std::path::Path;
     use aoc_client::AocClient;
     use crate::errors::AoCError;
 
@@ -407,6 +409,13 @@ pub mod input {
 
     fn write_content_to_file(year: u16, day: u8, content: String) -> Result<(), AoCError<String>> {
         let path = get_path(year, day)?;
+
+        if let Some(parent) = Path::new(&path).parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| AoCError::IOError(format!(
+                    "Creating folder structure '{:?}' failed. {}", parent, e)))?;
+        }
+
         let mut file = File::create(&path)
             .map_err(|e| AoCError::IOError(format!(
                 "Opening file '{}' failed: {}", path, e)))?;
@@ -414,4 +423,6 @@ pub mod input {
             .map_err(|e| AoCError::IOError(format!("Writing to '{}' failed: {}", path, e)))?;
         Ok(())
     }
+
+
 }
