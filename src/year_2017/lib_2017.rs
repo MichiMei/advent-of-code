@@ -63,8 +63,7 @@ pub mod knot_hash {
         }
 
         pub fn get_hash_bytes(&self) -> Vec<u8> {
-            self.numbers.iter()
-                .map(|x| *x)
+            self.numbers.iter().copied()
                 .collect()
         }
 

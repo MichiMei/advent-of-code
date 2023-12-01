@@ -72,18 +72,10 @@ impl Lights {
                 let neighbors = self.count_neighbors(x_index, y_index);
                 if self.grid[y_index][x_index] {
                     // light is on -> 2 | 3 for on
-                    if neighbors == 2 || neighbors == 3 {
-                        next.grid[y_index][x_index] = true;
-                    } else {
-                        next.grid[y_index][x_index] = false;
-                    }
+                    next.grid[y_index][x_index] = neighbors == 2 || neighbors == 3;
                 } else {
                     // light is off -> 3 for on
-                    if neighbors == 3 {
-                        next.grid[y_index][x_index] = true;
-                    } else {
-                        next.grid[y_index][x_index] = false;
-                    }
+                    next.grid[y_index][x_index] = neighbors == 3;
                 }
             }
         }

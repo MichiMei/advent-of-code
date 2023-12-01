@@ -46,8 +46,7 @@ impl Graph {
         let mut set = HashSet::new();
         set.insert(node);
         let mut queue = vec![node];
-        while !queue.is_empty() {
-            let next = queue.pop().expect("Was checked by while");
+        while let Some(next) = queue.pop() {
             if let Some(neighbors) = self.edges.get(next) {
                 for neighbor in neighbors {
                     if !set.contains(neighbor) {
@@ -67,8 +66,7 @@ impl Graph {
             let next = *remaining.iter().next().expect("Was checked by while");
             remaining.remove(&next);
             let mut queue = vec![next];
-            while !queue.is_empty() {
-                let next = queue.pop().expect("Was checked by while");
+            while let Some(next) = queue.pop() {
                 for neighbors in self.edges[next].iter() {
                     if remaining.remove(neighbors) {
                         queue.push(*neighbors);

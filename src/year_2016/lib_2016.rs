@@ -272,7 +272,7 @@ pub mod assembunny {
                     ))
                 }
                 x => {
-                    return Err(AoCError::BadInputFormat(format!(
+                    Err(AoCError::BadInputFormat(format!(
                         "Unknown instruction, expected 'cpy', 'inc', 'dec' or 'jnz'. Found '{}'", x)))
                 }
             }

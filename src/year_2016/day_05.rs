@@ -70,6 +70,10 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
 
 fn hash_is_partial_collision(hash: [u8; 16]) -> Option<(char, char)> {
     let hex: String = hash.iter().map(|x| format!("{:02x?}", x)).collect();
+    /*let hex: String = hash.iter().fold(String::new(), |mut output, x| {
+        let _ = write!(output, "{:02x?}", x);
+        output
+    });*/
     let mut iter = hex.chars();
     for _ in 0..5 {
         let char = iter.next().expect("Must contain Some as 16 bytes is 32 hex chars");

@@ -34,9 +34,7 @@ fn dijkstra_target(maze: &mut Maze, start: Point, goal: Point) -> Option<usize> 
     let mut visited = HashSet::new();
     let mut queue = vec![(start, 0)];
 
-    while !queue.is_empty() {
-        let (curr_point, curr_dist) =
-            queue.pop().expect("was tested to not be empty");
+    while let Some((curr_point, curr_dist)) = queue.pop() {
         if curr_point == goal {
             return Some(curr_dist)
         }
@@ -57,9 +55,7 @@ fn dijkstra_range(maze: &mut Maze, start: Point, range: usize) -> usize {
     let mut visited = HashSet::new();
     let mut queue = vec![(start, 0)];
 
-    while !queue.is_empty() {
-        let (curr_point, curr_dist) =
-            queue.pop().expect("was tested to not be empty");
+    while let Some((curr_point, curr_dist)) = queue.pop() {
         if curr_dist > range {
             return visited.len()
         }

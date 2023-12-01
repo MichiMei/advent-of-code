@@ -17,8 +17,7 @@ pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
 
 fn all_pairs_shortest_path(board: &Board) -> Result<Vec<Vec<usize>>, AoCError<String>> {
     let mut shortest_path_matrix = vec![];
-    let mut row = vec![];
-    row.resize(board.targets.len(), 0);
+    let row = vec![0; board.targets.len()];
     shortest_path_matrix.resize(board.targets.len(), row);
 
     for (targets, target_index) in board.targets.iter() {

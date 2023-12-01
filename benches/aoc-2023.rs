@@ -304,7 +304,7 @@ fn day_25_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 25 part 2", |b| b.iter(|| day_25::part_2(&input)));
 }*/
 
-criterion_group!(benches_2023,   // TODO add year
+criterion_group!(benches_2023,
     day_01_part_1_benchmark,
     day_01_part_2_benchmark/*,
     day_02_part_1_benchmark,
@@ -357,4 +357,4 @@ criterion_group!(benches_2023,   // TODO add year
     day_25_part_2_benchmark*/
 );
 
-criterion_main!(benches_2023);   // TODO add year
+criterion_main!(benches_2023);

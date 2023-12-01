@@ -112,8 +112,7 @@ struct Table {
 impl Table {
     fn new(count: usize) -> Self {
         let remaining = (0..count).collect();
-        let mut order = vec![];
-        order.reserve(count);
+        let order = Vec::with_capacity(count);
         Self{remaining, order, happiness: 0}
     }
 }

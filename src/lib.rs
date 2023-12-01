@@ -5,6 +5,7 @@ use std::io::{BufRead, BufReader, stdin};
 pub mod year_2015;
 pub mod year_2016;
 pub mod year_2017;
+pub mod year_2023;
 
 pub fn read_lines_trimmed_from_file(file_name: &str) -> io::Result<Vec<String>> {
     let file = File::open(file_name)?;
@@ -143,8 +144,7 @@ pub mod md5_collision {
         let num_threads = num_cpus::get();
         let mutex = Arc::new(AtomicUsize::new(usize::MAX));
 
-        let mut handles = vec![];
-        handles.reserve(num_threads);
+        let mut handles = Vec::with_capacity(num_threads);
 
         for thread_id in 0..num_threads {
             let input = input.to_string();

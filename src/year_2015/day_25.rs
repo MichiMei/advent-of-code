@@ -19,7 +19,7 @@ pub fn part_2(_: &[String]) -> Result<String, AoCError<String>> {
 fn parse_input(line: &str) -> Result<(usize, usize), AoCError<String>> {
     let words: Vec<&str> = line.split(' ').collect();
     if words.len() < 19 {
-        return Err(AoCError::BadInputFormat(String::new()))?;
+        Err(AoCError::BadInputFormat(String::new()))?;
     }
     let mut row_str = words[16];
     row_str = &row_str[..row_str.len()-1];

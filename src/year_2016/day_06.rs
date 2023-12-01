@@ -129,7 +129,7 @@ impl CharCounter {
     }
 
     fn char_to_usize(char: char) -> Option<usize> {
-        if !('a'..='z').contains(&char) {
+        if !char.is_ascii_lowercase() {
             return None
         }
         let index = (char as usize) - ('a' as usize);
@@ -144,7 +144,7 @@ impl CharCounter {
         let tmp = index + ('a' as usize);
         assert!(tmp <= u8::MAX as usize);
         let char = tmp as u8 as char;
-        assert!(('a'..='z').contains(&char));
+        assert!(char.is_ascii_lowercase());
         Some(char)
     }
 }

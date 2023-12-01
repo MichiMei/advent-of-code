@@ -59,7 +59,7 @@ fn calc_volume(l: usize, w: usize, h: usize) -> usize {
 }
 
 fn calc_shortest_equator(l: usize, w: usize, h: usize) -> usize {
-    let mut sides = vec![l, w, h];
+    let mut sides = [l, w, h];
     sides.sort();
 
     sides[0]*2 + sides[1]*2

@@ -59,39 +59,39 @@ mod test {
 
     #[test]
     fn check_examples_part_1() {
-        assert!(part_1(&["(())".to_string()]) == Ok("0".to_string()));
-        assert!(part_1(&["()()".to_string()]) == Ok("0".to_string()));
+        assert_eq!(part_1(&["(())".to_string()]), Ok("0".to_string()));
+        assert_eq!(part_1(&["()()".to_string()]), Ok("0".to_string()));
 
-        assert!(part_1(&["(((".to_string()]) == Ok("3".to_string()));
-        assert!(part_1(&["(()(()(".to_string()]) == Ok("3".to_string()));
+        assert_eq!(part_1(&["(((".to_string()]), Ok("3".to_string()));
+        assert_eq!(part_1(&["(()(()(".to_string()]), Ok("3".to_string()));
 
-        assert!(part_1(&["))(((((".to_string()]) == Ok("3".to_string()));
+        assert_eq!(part_1(&["))(((((".to_string()]), Ok("3".to_string()));
 
-        assert!(part_1(&["())".to_string()]) == Ok("-1".to_string()));
-        assert!(part_1(&["))(".to_string()]) == Ok("-1".to_string()));
+        assert_eq!(part_1(&["())".to_string()]), Ok("-1".to_string()));
+        assert_eq!(part_1(&["))(".to_string()]), Ok("-1".to_string()));
 
-        assert!(part_1(&[")))".to_string()]) == Ok("-3".to_string()));
-        assert!(part_1(&[")())())".to_string()]) == Ok("-3".to_string()));
+        assert_eq!(part_1(&[")))".to_string()]), Ok("-3".to_string()));
+        assert_eq!(part_1(&[")())())".to_string()]), Ok("-3".to_string()));
     }
 
     #[test]
     fn check_input_part_1() -> Result<(), AoCError<String>> {
         let input = get_input(2015, 1)?;
-        assert!(part_1(&input) == Ok("138".to_string()));
+        assert_eq!(part_1(&input), Ok("138".to_string()));
         Ok(())
     }
 
     #[test]
     fn check_examples_part_2() {
-        assert!(part_2(&[")".to_string()]) == Ok("1".to_string()));
+        assert_eq!(part_2(&[")".to_string()]), Ok("1".to_string()));
 
-        assert!(part_2(&["()())".to_string()]) == Ok("5".to_string()));
+        assert_eq!(part_2(&["()())".to_string()]), Ok("5".to_string()));
     }
 
     #[test]
     fn check_input_part_2() -> Result<(), AoCError<String>> {
         let input = get_input(2015, 1)?;
-        assert!(part_2(&input) == Ok("1771".to_string()));
+        assert_eq!(part_2(&input), Ok("1771".to_string()));
         Ok(())
     }
 }

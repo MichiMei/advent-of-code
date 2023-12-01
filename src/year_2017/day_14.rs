@@ -74,8 +74,7 @@ fn count_components(mut grid: Vec<Vec<bool>>) -> usize {
 
 fn handle_component(grid: &mut [Vec<bool>], p: Point) {
     let mut queue = vec![p];
-    while !queue.is_empty() {
-        let p = queue.pop().expect("Checked by while");
+    while let Some(p) = queue.pop() {
         grid[p.1][p.0] = false;
         if p.0 > 0 && grid[p.1][p.0-1] {
             queue.push((p.0-1, p.1))

@@ -92,12 +92,10 @@ impl<'a> MD5Cache<'a> {
         let mut handles = vec![];
         for thread_index in 0..num_threads {
             let start_index = cache_length + thread_index*block_size;
-            let block_size = block_size;
             let salt = self.salt.to_string();
             let key_stretching = self.key_stretching;
             let handle = std::thread::spawn(move || {
-                let mut res = vec![];
-                res.reserve(block_size);
+                let mut res = Vec::with_capacity(block_size);
                 for hash_index in start_index..start_index+block_size {
                     let str = format!("{}{}", salt, hash_index);
                     let hash_str = if key_stretching {

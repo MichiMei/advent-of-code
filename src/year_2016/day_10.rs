@@ -248,9 +248,7 @@ impl Factory {
     }
 
     fn get_next_ready(&mut self) -> Option<usize> {
-        while !self.bots_ready.is_empty() {
-            let next = self.bots_ready.pop().expect("bots_ready was tested to not be \
-                empty");
+        while let Some(next) = self.bots_ready.pop() {
             if self.bots[next].as_mut().expect("bot was added to list -> has to exist")
                 .is_ready() {
                 return Some(next)
