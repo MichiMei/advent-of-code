@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 aoc-client = "0.2.0"
-criterion = "0.4.0"
+criterion = "0.5.1"
 num_cpus = "1.15.0"
 md5-rs = "0.1.5"
 
@@ -21,6 +21,10 @@ harness = false
 
 [[bench]]
 name = "aoc-2017"
+harness = false
+
+[[bench]]
+name = "aoc-2023"
 harness = false
 
 [[bin]]
