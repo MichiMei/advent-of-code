@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::fmt::Write;
 use crate::errors::AoCError;
 use crate::md5_collision::hash;
 
@@ -102,11 +103,18 @@ impl<'a> MD5Cache<'a> {
                         let mut tmp = str;
                         for _ in 0..2017 {
                             tmp = hash(&tmp).iter()
-                                .map(|b| format!("{:02x}", b)).collect::<String>();
+                                .fold(String::new(), |mut output, x| {
+                                    let _ = write!(output, "{:02x}", x);
+                                    output
+                                })
                         }
                         tmp
                     } else {
-                        hash(&str).iter().map(|b| format!("{:02x}", b)).collect::<String>()
+                        hash(&str).iter()
+                            .fold(String::new(), |mut output, x| {
+                                let _ = write!(output, "{:02x}", x);
+                                output
+                            })
                     };
                     let mut chars = hash_str.chars();
                     let mut triplets = None;

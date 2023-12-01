@@ -134,6 +134,7 @@ pub mod errors {
 }
 
 pub mod md5_collision {
+    use std::fmt::Write;
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use md5_rs::Context;
@@ -197,7 +198,10 @@ pub mod md5_collision {
     }
 
     fn collision(hash: &[u8], collision_length: usize) -> bool {
-        let hex: String = hash.iter().map(|x| format!("{:02x?}", x)).collect();
+        let hex = hash.iter().fold(String::new(), |mut output, x| {
+            let _ = write!(output, "{:02x?}", x);
+            output
+        });
         let pattern = "0".repeat(collision_length);
         hex.starts_with(&pattern)
     }

@@ -1,4 +1,5 @@
 use std::collections::VecDeque;
+use std::fmt::Write;
 use crate::errors::AoCError;
 use crate::md5_collision::hash;
 
@@ -63,8 +64,11 @@ fn find_longest_path(start: Point, end: Point, passcode: &str)
 fn get_neighbors(p: Point, passcode: &str, path: &str) -> Vec<(Point, String)> {
     let hash = hash(&format!("{}{}", passcode, path))
         .iter()
-        .map(|b| format!("{:02x}", b))
-        .collect::<String>();
+        .fold(String::new(), |mut output, x| {
+            let _ = write!(output, "{:02x}", x);
+            output
+        });
+
     let mut res = vec![];
     if p.0 > 0 && is_door_open(&hash, Direction::Left) {
         res.push(((p.0-1, p.1), format!("{}{}", path, Direction::Left.get_char())));

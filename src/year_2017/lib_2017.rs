@@ -1,4 +1,5 @@
 pub mod knot_hash {
+    use std::fmt::Write;
     use std::fmt::{Display, Formatter};
     use std::ops::BitXor;
 
@@ -49,8 +50,10 @@ pub mod knot_hash {
                 .map(|bytes| bytes[1..]
                     .iter().
                     fold(bytes[0], |acc, b| acc.bitxor(b)))
-                .map(|b| format!("{:02x}", b))
-                .collect()
+                .fold(String::new(), |mut output, x| {
+                    let _ = write!(output, "{:02x}", x);
+                    output
+                })
         }
 
         pub fn get_dense_hash_bytes(&self) -> Vec<u8> {
@@ -63,8 +66,7 @@ pub mod knot_hash {
         }
 
         pub fn get_hash_bytes(&self) -> Vec<u8> {
-            self.numbers.iter().copied()
-                .collect()
+            self.numbers.to_vec()
         }
 
         pub fn get_start_product(&self) -> Option<usize> {
