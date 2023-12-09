@@ -88,7 +88,7 @@ fn day_07_part_2_benchmark(c: &mut Criterion) {
     c.bench_function("Bench day 07 part 2", |b| b.iter(|| day_07::part_2(&input)));
 }
 
-/*fn day_08_part_1_benchmark(c: &mut Criterion) {
+fn day_08_part_1_benchmark(c: &mut Criterion) {
     let input = get_input(YEAR, 8).expect("Reading file failed");
 
     c.bench_function("Bench day 08 part 1", |b| b.iter(|| day_08::part_1(&input)));
@@ -98,9 +98,9 @@ fn day_08_part_2_benchmark(c: &mut Criterion) {
     let input = get_input(YEAR, 8).expect("Reading file failed");
 
     c.bench_function("Bench day 08 part 2", |b| b.iter(|| day_08::part_2(&input)));
-}*/
+}
 
-/*fn day_09_part_1_benchmark(c: &mut Criterion) {
+fn day_09_part_1_benchmark(c: &mut Criterion) {
     let input = get_input(YEAR, 9).expect("Reading file failed");
 
     c.bench_function("Bench day 09 part 1", |b| b.iter(|| day_09::part_1(&input)));
@@ -110,7 +110,7 @@ fn day_09_part_2_benchmark(c: &mut Criterion) {
     let input = get_input(YEAR, 9).expect("Reading file failed");
 
     c.bench_function("Bench day 09 part 2", |b| b.iter(|| day_09::part_2(&input)));
-}*/
+}
 
 /*fn day_10_part_1_benchmark(c: &mut Criterion) {
     let input = get_input(YEAR, 10).expect("Reading file failed");
@@ -318,11 +318,11 @@ criterion_group!(benches_2023,
     day_06_part_1_benchmark,
     day_06_part_2_benchmark,
     day_07_part_1_benchmark,
-    day_07_part_2_benchmark/*,
+    day_07_part_2_benchmark,
     day_08_part_1_benchmark,
     day_08_part_2_benchmark,
     day_09_part_1_benchmark,
-    day_09_part_2_benchmark,
+    day_09_part_2_benchmark/*,
     day_10_part_1_benchmark,
     day_10_part_2_benchmark,
     day_11_part_1_benchmark,
