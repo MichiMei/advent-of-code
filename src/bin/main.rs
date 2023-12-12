@@ -461,12 +461,12 @@ fn run_2023() -> Result<(), AoCError<String>> {
     let input = get_input(year, 11)?;
     println!("y{}-d11_p1: {}", year, day_11::part_1(&input).unwrap());
     println!("y{}-d11_p2: {}", year, day_11::part_2(&input).unwrap());
-/*
+
     // day12
     let input = get_input(year, 12)?;
     println!("y{}-d12_p1: {}", year, day_12::part_1(&input).unwrap());
     println!("y{}-d12_p2: {}", year, day_12::part_2(&input).unwrap());
-
+/*
     // day13
     let input = get_input(year, 13)?;
     println!("y{}-d13_p1: {}", year, day_13::part_1(&input).unwrap());
