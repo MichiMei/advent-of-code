@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use crate::errors::AoCError;
+use crate::geometrics::{Direction, Grid, Parsable, Point};
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut grid = Grid::parse(input)?;
-    grid.roll_north();
+    grid.roll_direction(Direction::North);
     Ok(grid.sum_rows().to_string())
 }
 
@@ -14,31 +15,9 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     Ok(grid.sum_rows().to_string())
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-struct Grid {
-    grid: Vec<Vec<Tile>>,
-}
-
-impl Grid {
-    fn parse(input: &[String]) -> Result<Self, AoCError<String>> {
-        let grid = input.iter()
-            .map(|line| line.chars()
-                .map(Tile::parse)
-                .collect::<Result<_, _>>())
-            .collect::<Result<_, _>>()?;
-        Ok(Self { grid })
-    }
-
+impl Grid<Tile> {
     fn get_rounded(&self) -> Vec<(usize, usize)> {
-        let mut res = vec![];
-        for (row_index, row) in self.grid.iter().enumerate() {
-            for (col_index, elem) in row.iter().enumerate() {
-                if *elem == Tile::Rounded {
-                    res.push((row_index, col_index));
-                }
-            }
-        }
-        res
+        self.get_all_positions_of(&Tile::Rounded)
     }
 
     fn multi_circle(&mut self, count: usize) {
@@ -59,74 +38,49 @@ impl Grid {
     }
 
     fn circle(&mut self) {
-        self.roll_north();
-        self.roll_west();
-        self.roll_south();
-        self.roll_east();
+        self.roll_direction(Direction::North);
+        self.roll_direction(Direction::West);
+        self.roll_direction(Direction::South);
+        self.roll_direction(Direction::East);
     }
 
-    fn roll_north(&mut self) {
-        for y in 0..self.grid.len() {
-            for x in 0..self.grid[y].len() {
-                if let Tile::Rounded = self.grid[y][x] {
-                    let mut target = y;
-                    while target > 0 && Tile::Empty == self.grid[target-1][x] {
-                        target -= 1;
-                    }
-                    if target != y {
-                        self.grid[y][x] = Tile::Empty;
-                        self.grid[target][x] = Tile::Rounded;
-                    }
-                }
-            }
+    fn move_tile(&mut self, p0: &Point, p1: &Point) -> bool {
+        if self.get_tile(p0) != Some(&Tile::Rounded) {
+            return false;
         }
-    }
-
-    fn roll_south(&mut self) {
-        for y in (0..self.grid.len()).rev() {
-            for x in 0..self.grid[y].len() {
-                if let Tile::Rounded = self.grid[y][x] {
-                    let mut target = y;
-                    while target+1 < self.grid.len() && Tile::Empty == self.grid[target+1][x] {
-                        target += 1;
-                    }
-                    if target != y {
-                        self.grid[y][x] = Tile::Empty;
-                        self.grid[target][x] = Tile::Rounded;
-                    }
-                }
-            }
+        if self.get_tile(p1) != Some(&Tile::Empty) {
+            return false;
         }
+        self.set_tile(p0, Tile::Empty) &&
+            self.set_tile(p1, Tile::Rounded)
     }
 
-    fn roll_east(&mut self) {
-        for y in 0..self.grid.len() {
-            for x in (0..self.grid[y].len()).rev() {
-                if let Tile::Rounded = self.grid[y][x] {
-                    let mut target = x;
-                    while target+1 < self.grid[y].len() && Tile::Empty == self.grid[y][target+1] {
-                        target += 1;
-                    }
-                    if target != x {
-                        self.grid[y][x] = Tile::Empty;
-                        self.grid[y][target] = Tile::Rounded;
-                    }
-                }
-            }
-        }
-    }
+    fn roll_direction(&mut self, dir: Direction) {
+        let size = self.get_dimension();
+        let row_range = if dir == Direction::South {
+            itertools::Either::Left((0..size.1).rev())
+        } else {
+            itertools::Either::Right(0..size.1)
+        };
+        let col_range =if dir == Direction::East {
+            itertools::Either::Left((0..size.0).rev())
+        } else {
+            itertools::Either::Right(0..size.0)
+        };
 
-    fn roll_west(&mut self) {
-        for y in 0..self.grid.len() {
-            for x in 0..self.grid[y].len() {
-                if let Tile::Rounded = self.grid[y][x] {
-                    let mut target = x;
-                    while target > 0 && Tile::Empty == self.grid[y][target-1] {
-                        target -= 1;
+        for y in row_range {
+            for x in col_range.clone() {
+                let point = (x, y);
+                if let Some(&Tile::Rounded) = self.get_tile(&(x, y)) {
+                    let mut target = point;
+                    while let Some(next_point) = dir.move_point(&target) {
+                        if self.get_tile(&next_point) != Some(&Tile::Empty) {
+                            break;
+                        }
+                        target = next_point;
                     }
-                    if target != x {
-                        self.grid[y][x] = Tile::Empty;
-                        self.grid[y][target] = Tile::Rounded;
+                    if target != point {
+                        assert!(self.move_tile(&point, &target));
                     }
                 }
             }
@@ -134,31 +88,13 @@ impl Grid {
     }
 
     fn sum_rows(&self) -> usize {
-        /*self.grid.iter().zip((1..=self.grid.len()).rev())
-            .map(|(row, index)| row.iter()
-                .filter(|elem| **elem == Tile::Rounded)
-                .count()*index)
-            .sum()
-
-         */
-        let nums = self.grid.iter().zip((1..=self.grid.len()).rev())
+        let size = self.get_dimension();
+        let nums = self.iter().zip((1..=size.1).rev())
             .map(|(row, index)| row.iter()
                 .filter(|elem| **elem == Tile::Rounded)
                 .count()*index)
             .collect::<Vec<_>>();
         nums.iter().sum()
-    }
-}
-
-impl Display for Grid {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for line in self.grid.iter() {
-            for elem in line.iter() {
-                write!(f, "{}", elem).unwrap();
-            }
-            writeln!(f).unwrap();
-        }
-        write!(f, "")
     }
 }
 
@@ -169,7 +105,7 @@ enum Tile {
     Empty,
 }
 
-impl Tile {
+impl Parsable for Tile {
     fn parse(c: char) -> Result<Self, AoCError<String>> {
         match c {
             '#' => Ok(Self::Square),

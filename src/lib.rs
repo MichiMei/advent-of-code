@@ -432,6 +432,8 @@ pub mod input {
 }
 
 pub mod geometrics {
+    use std::fmt::{Display, Formatter};
+    use std::slice::Iter;
     use crate::errors::{AoCError, AoCResult};
 
     pub type Point = (usize, usize);
@@ -526,6 +528,12 @@ pub mod geometrics {
     }
 
     impl<T> Grid<T> {
+        pub fn iter(&self) -> GridIter<'_, T> {
+            GridIter {
+                iter: self.grid.iter(),
+            }
+        }
+
         pub fn get_tile(&self, pos: &Point) -> Option<&T> {
             if let Some(row) = self.grid.get(pos.1) {
                 row.get(pos.0)
@@ -534,11 +542,42 @@ pub mod geometrics {
             }
         }
 
+        pub fn get_tile_mut(&mut self, pos: &Point) -> Option<&mut T> {
+            if let Some(row) = self.grid.get_mut(pos.1) {
+                row.get_mut(pos.0)
+            } else {
+                None
+            }
+        }
+
+        pub fn set_tile(&mut self, pos: &Point, tile: T) -> bool {
+            if let Some(prev) = self.get_tile_mut(pos) {
+                *prev = tile;
+                true
+            } else {
+                false
+            }
+        }
+
         pub fn get_dimension(&self) -> Point {
             if self.grid.is_empty() {
                 return (0, 0)
             }
             (self.grid[0].len(), self.grid.len())
+        }
+    }
+
+    impl<T: Eq> Grid<T> {
+        pub fn get_all_positions_of(&self, pattern: &T) -> Vec<Point> {
+            let mut res = vec![];
+            for (row_index, row) in self.grid.iter().enumerate() {
+                for (col_index, elem) in row.iter().enumerate() {
+                    if elem == pattern {
+                        res.push((row_index, col_index));
+                    }
+                }
+            }
+            res
         }
     }
 
@@ -587,6 +626,30 @@ pub mod geometrics {
                 grid.push(row);
             }
             Ok(Self { grid })
+        }
+    }
+
+    impl<T: Display> Display for Grid<T> {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            for line in self.grid.iter() {
+                for elem in line.iter() {
+                    write!(f, "{}", elem)?;
+                }
+                writeln!(f)?;
+            }
+            Ok(())
+        }
+    }
+
+    pub struct GridIter<'a, T> {
+        iter: Iter<'a, Vec<T>>,
+    }
+
+    impl<'a, T> Iterator for GridIter<'a, T> {
+        type Item = &'a Vec<T>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            self.iter.next()
         }
     }
 
