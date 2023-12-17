@@ -74,8 +74,6 @@ pub fn read_lines_untrimmed_from_stdin() -> Vec<String> {
     res
 }
 
-
-
 pub mod output {
     pub fn bool_slice_to_string(slice: &[bool]) -> String {
         let mut output = String::new();
@@ -93,6 +91,8 @@ pub mod output {
 pub mod errors {
     use std::error::Error;
     use std::fmt::{Debug, Display, Formatter};
+
+    pub type AoCResult<T> = Result<T, AoCError<String>>;
 
     #[derive(Debug, PartialEq)]
     pub enum AoCError<Message: Debug + Display> {
@@ -429,4 +429,168 @@ pub mod input {
     }
 
 
+}
+
+pub mod geometrics {
+    use crate::errors::{AoCError, AoCResult};
+
+    pub type Point = (usize, usize);
+
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+    pub enum Direction {
+        North,
+        East,
+        South,
+        West,
+    }
+
+    impl Direction {
+        pub fn parse_from_char(c: char) -> AoCResult<Self> {
+            match c {
+                'N'|'n' => Ok(Self::North),
+                'E'|'e' => Ok(Self::East),
+                'S'|'s' => Ok(Self::South),
+                'W'|'w' => Ok(Self::West),
+                c => Err(AoCError::BadInputFormat(
+                    format!("Parsing Direction failed. Only initial letters (upper- and lowercase) \
+                        supported. Found '{}'", c)))
+            }
+        }
+
+        pub fn move_point(&self, point: &Point) -> Option<Point> {
+            match self {
+                Direction::North => point.1.checked_sub(1).map(|y| (point.0, y)),
+                Direction::East => point.0.checked_add(1).map(|x| (x, point.1)),
+                Direction::South => point.1.checked_add(1).map(|y| (point.0, y)),
+                Direction::West => point.0.checked_sub(1).map(|x| (x, point.1)),
+            }
+        }
+
+        pub fn get_right(&self) -> Self {
+            match self {
+                Direction::North => Self::East,
+                Direction::East => Self::South,
+                Direction::South => Self::West,
+                Direction::West => Self::North,
+            }
+        }
+
+        pub fn get_left(&self) -> Self {
+            match self {
+                Direction::North => Self::West,
+                Direction::East => Self::North,
+                Direction::South => Self::East,
+                Direction::West => Self::South,
+            }
+        }
+
+        pub fn get_opposing(&self) -> Self {
+            match self {
+                Direction::North => Self::South,
+                Direction::East => Self::West,
+                Direction::South => Self::North,
+                Direction::West => Self::East,
+            }
+        }
+
+        pub fn is_horizontal(&self) -> bool {
+            match self {
+                Direction::North => false,
+                Direction::East => true,
+                Direction::South => false,
+                Direction::West => true,
+            }
+        }
+
+        pub fn is_vertical(&self) -> bool {
+            !self.is_horizontal()
+        }
+
+        pub fn get_horizontal() -> Vec<Self> {
+            vec![
+                Self::East,
+                Self::West,
+            ]
+        }
+
+        pub fn get_vertical() -> Vec<Self> {
+            vec![
+                Self::North,
+                Self::South,
+            ]
+        }
+    }
+
+    pub struct Grid<T> {
+        grid: Vec<Vec<T>>,
+    }
+
+    impl<T> Grid<T> {
+        pub fn get_tile(&self, pos: &Point) -> Option<&T> {
+            if let Some(row) = self.grid.get(pos.1) {
+                row.get(pos.0)
+            } else {
+                None
+            }
+        }
+
+        pub fn get_dimension(&self) -> Point {
+            if self.grid.is_empty() {
+                return (0, 0)
+            }
+            (self.grid[0].len(), self.grid.len())
+        }
+    }
+
+    impl Grid<u8> {
+        pub fn parse_digits(input: &[String]) -> AoCResult<Grid<u8>> {
+            if input.is_empty() {
+                return Err(AoCError::UnexpectedInputLength("Input cannot be empty".to_string()))
+            }
+            let mut grid = Vec::with_capacity(input.len());
+            let width = input[0].len();
+            for line in input {
+                if width != line.len() {
+                    return Err(AoCError::BadInputFormat(
+                        "Lines need to have same number of digits.".to_string()))
+                }
+                let row = line.chars()
+                    .filter(|c| c.is_ascii_digit())
+                    .map(|c| (c as u8) - b'0')
+                    .collect::<Vec<_>>();
+                if width != row.len() {
+                    return Err(AoCError::BadInputFormat(
+                        "Input can only contain digits '0' to '9'".to_string()))
+                }
+                grid.push(row);
+            }
+            Ok(Self { grid })
+        }
+    }
+
+    impl<T: Parsable> Grid<T> {
+        pub fn parse(input: &[String]) -> AoCResult<Grid<T>> {
+            if input.is_empty() {
+                return Err(AoCError::UnexpectedInputLength("Input cannot be empty".to_string()))
+            }
+            let mut grid = Vec::with_capacity(input.len());
+            let width = input[0].len();
+            for line in input {
+                if width != line.len() {
+                    return Err(AoCError::BadInputFormat(
+                        "Lines need to have same lengths".to_string()))
+                }
+                let row = line.chars()
+                    .map(|c| T::parse(c))
+                    .collect::<AoCResult<Vec<_>>>()?;
+                assert_eq!(row.len(), width);
+                grid.push(row);
+            }
+            Ok(Self { grid })
+        }
+    }
+
+    pub trait Parsable {
+        fn parse(c: char) -> AoCResult<Self> where Self: Sized;
+    }
 }

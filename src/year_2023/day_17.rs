@@ -1,62 +1,29 @@
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashMap};
 use crate::errors::AoCError;
+use crate::geometrics::{Direction, Grid, Point};
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
-    let grid = Grid::parse(input)?;
+    let grid = Grid::parse_digits(input)?;
     let start = (0, 0);
-    let end = (grid.grid[0].len()-1, grid.grid.len()-1);
-    assert!(grid.get_value(&end).is_some());
+    let size = grid.get_dimension();
+    let end = (size.0-1, size.1-1);
+    assert!(grid.get_tile(&end).is_some());
     grid.get_shortest_path(start, end, 0, 3)
         .map(|v| v.to_string())
 }
 
 pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
-    let grid = Grid::parse(input)?;
+    let grid = Grid::parse_digits(input)?;
     let start = (0, 0);
-    let end = (grid.grid[0].len()-1, grid.grid.len()-1);
-    assert!(grid.get_value(&end).is_some());
+    let size = grid.get_dimension();
+    let end = (size.0-1, size.1-1);
+    assert!(grid.get_tile(&end).is_some());
     grid.get_shortest_path(start, end, 4, 10)
         .map(|v| v.to_string())
 }
 
-struct Grid {
-    grid: Vec<Vec<u8>>
-}
-
-impl Grid {
-    fn parse(input: &[String]) -> Result<Self, AoCError<String>> {
-        if input.is_empty() {
-            return Err(AoCError::UnexpectedInputLength("Input cannot be empty".to_string()))
-        }
-        let mut grid = Vec::with_capacity(input.len());
-        let width = input[0].len();
-        for line in input {
-            if width != line.len() {
-                return Err(AoCError::BadInputFormat(
-                    "Lines need to have same number of digits.".to_string()))
-            }
-            let row = line.chars()
-                .filter(|c| c.is_ascii_digit())
-                .map(|c| (c as u8) - b'0')
-                .collect::<Vec<_>>();
-            if width != row.len() {
-                return Err(AoCError::BadInputFormat(
-                    "Input can only contain digits '0' to '9'".to_string()))
-            }
-            grid.push(row);
-        }
-        Ok(Self { grid })
-    }
-
-    fn get_value(&self, pos: &Point) -> Option<u8> {
-        if let Some(row) = self.grid.get(pos.1) {
-            row.get(pos.0).copied()
-        } else {
-            None
-        }
-    }
-
+impl Grid<u8> {
     fn get_shortest_path(&self, start: Point, end: Point, min_to_turn: usize, max_to_turn: usize)
         -> Result<usize, AoCError<String>>
     {
@@ -117,7 +84,7 @@ struct Path {
 }
 
 impl Path {
-    fn get_possible(&self, grid: &Grid) -> Vec<Self> {
+    fn get_possible(&self, grid: &Grid<u8>) -> Vec<Self> {
         let mut res = vec![];
         if let Some(path) = self.step_forward(grid) {
             res.push(path);
@@ -131,12 +98,12 @@ impl Path {
         res
     }
 
-    fn step_forward(&self, grid: &Grid) -> Option<Self> {
+    fn step_forward(&self, grid: &Grid<u8>) -> Option<Self> {
         if self.steps >= self.max_to_turn {
             return None
         }
         if let Some(point) = self.dir.move_point(&self.pos) {
-            grid.get_value(&point).map(|value| Self {
+            grid.get_tile(&point).map(|&value| Self {
                     pos: point,
                     dir: self.dir,
                     steps: self.steps+1,
@@ -149,13 +116,13 @@ impl Path {
         }
     }
 
-    fn step_right(&self, grid: &Grid) -> Option<Self> {
+    fn step_right(&self, grid: &Grid<u8>) -> Option<Self> {
         if self.steps < self.min_to_turn {
             return None
         }
         let dir = self.dir.get_right();
         if let Some(point) = dir.move_point(&self.pos) {
-            grid.get_value(&point).map(|value| Self {
+            grid.get_tile(&point).map(|&value| Self {
                     pos: point,
                     dir,
                     steps: 1,
@@ -168,13 +135,13 @@ impl Path {
         }
     }
 
-    fn step_left(&self, grid: &Grid) -> Option<Self> {
+    fn step_left(&self, grid: &Grid<u8>) -> Option<Self> {
         if self.steps < self.min_to_turn {
             return None
         }
         let dir = self.dir.get_left();
         if let Some(point) = dir.move_point(&self.pos) {
-            grid.get_value(&point).map(|value| Self {
+            grid.get_tile(&point).map(|&value| Self {
                     pos: point,
                     dir,
                     steps: 1,
@@ -210,61 +177,6 @@ impl PartialOrd for Path {
 impl Ord for Path {
     fn cmp(&self, other: &Self) -> Ordering {
         self.cooling.cmp(&other.cooling)
-    }
-}
-
-type Point = (usize, usize);
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl Direction {
-    fn move_point(&self, point: &Point) -> Option<Point> {
-        match self {
-            Direction::North => {
-                if point.1 == 0 {
-                    None
-                } else {
-                    Some((point.0, point.1-1))
-                }
-            }
-            Direction::East => {
-                Some((point.0+1, point.1))
-            }
-            Direction::South => {
-                Some((point.0, point.1+1))
-            }
-            Direction::West => {
-                if point.0 == 0 {
-                    None
-                } else {
-                    Some((point.0-1, point.1))
-                }
-            }
-        }
-    }
-
-    fn get_right(&self) -> Self {
-        match self {
-            Direction::North => Self::East,
-            Direction::East => Self::South,
-            Direction::South => Self::West,
-            Direction::West => Self::North,
-        }
-    }
-
-    fn get_left(&self) -> Self {
-        match self {
-            Direction::North => Self::West,
-            Direction::East => Self::North,
-            Direction::South => Self::East,
-            Direction::West => Self::South,
-        }
     }
 }
 
