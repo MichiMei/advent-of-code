@@ -74,8 +74,6 @@ pub fn read_lines_untrimmed_from_stdin() -> Vec<String> {
     res
 }
 
-
-
 pub mod output {
     pub fn bool_slice_to_string(slice: &[bool]) -> String {
         let mut output = String::new();
@@ -93,6 +91,8 @@ pub mod output {
 pub mod errors {
     use std::error::Error;
     use std::fmt::{Debug, Display, Formatter};
+
+    pub type AoCResult<T> = Result<T, AoCError<String>>;
 
     #[derive(Debug, PartialEq)]
     pub enum AoCError<Message: Debug + Display> {
@@ -429,4 +429,236 @@ pub mod input {
     }
 
 
+}
+
+pub mod geometrics {
+    use std::fmt::{Display, Formatter};
+    use std::slice::Iter;
+    use num::{CheckedAdd, CheckedSub, One};
+    use crate::errors::{AoCError, AoCResult};
+
+    //pub type Point = (usize, usize);
+    pub type Point<I> = (I, I);
+
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+    pub enum Direction {
+        North,
+        East,
+        South,
+        West,
+    }
+
+    impl Direction {
+        pub fn parse_from_char(c: char) -> AoCResult<Self> {
+            match c {
+                'N'|'n' => Ok(Self::North),
+                'E'|'e' => Ok(Self::East),
+                'S'|'s' => Ok(Self::South),
+                'W'|'w' => Ok(Self::West),
+                c => Err(AoCError::BadInputFormat(
+                    format!("Parsing Direction failed. Only initial letters (upper- and lowercase) \
+                        supported. Found '{}'", c)))
+            }
+        }
+
+        pub fn move_point<I: Copy + CheckedSub + CheckedAdd + One>(&self, point: &Point<I>)
+            -> Option<Point<I>>
+        {
+            match self {
+                Direction::North => point.1.checked_sub(&I::one()).map(|y| (point.0, y)),
+                Direction::East => point.0.checked_add(&I::one()).map(|x| (x, point.1)),
+                Direction::South => point.1.checked_add(&I::one()).map(|y| (point.0, y)),
+                Direction::West => point.0.checked_sub(&I::one()).map(|x| (x, point.1)),
+            }
+        }
+
+        pub fn get_right(&self) -> Self {
+            match self {
+                Direction::North => Self::East,
+                Direction::East => Self::South,
+                Direction::South => Self::West,
+                Direction::West => Self::North,
+            }
+        }
+
+        pub fn get_left(&self) -> Self {
+            match self {
+                Direction::North => Self::West,
+                Direction::East => Self::North,
+                Direction::South => Self::East,
+                Direction::West => Self::South,
+            }
+        }
+
+        pub fn get_opposing(&self) -> Self {
+            match self {
+                Direction::North => Self::South,
+                Direction::East => Self::West,
+                Direction::South => Self::North,
+                Direction::West => Self::East,
+            }
+        }
+
+        pub fn is_horizontal(&self) -> bool {
+            match self {
+                Direction::North => false,
+                Direction::East => true,
+                Direction::South => false,
+                Direction::West => true,
+            }
+        }
+
+        pub fn is_vertical(&self) -> bool {
+            !self.is_horizontal()
+        }
+
+        pub fn get_horizontal() -> Vec<Self> {
+            vec![
+                Self::East,
+                Self::West,
+            ]
+        }
+
+        pub fn get_vertical() -> Vec<Self> {
+            vec![
+                Self::North,
+                Self::South,
+            ]
+        }
+    }
+
+    pub struct Grid<T> {
+        grid: Vec<Vec<T>>,
+    }
+
+    impl<T> Grid<T> {
+        pub fn iter(&self) -> GridIter<'_, T> {
+            GridIter {
+                iter: self.grid.iter(),
+            }
+        }
+
+        pub fn get_tile(&self, pos: &Point<usize>) -> Option<&T> {
+            if let Some(row) = self.grid.get(pos.1) {
+                row.get(pos.0)
+            } else {
+                None
+            }
+        }
+
+        pub fn get_tile_mut(&mut self, pos: &Point<usize>) -> Option<&mut T> {
+            if let Some(row) = self.grid.get_mut(pos.1) {
+                row.get_mut(pos.0)
+            } else {
+                None
+            }
+        }
+
+        pub fn set_tile(&mut self, pos: &Point<usize>, tile: T) -> bool {
+            if let Some(prev) = self.get_tile_mut(pos) {
+                *prev = tile;
+                true
+            } else {
+                false
+            }
+        }
+
+        pub fn get_dimension(&self) -> Point<usize> {
+            if self.grid.is_empty() {
+                return (0, 0)
+            }
+            (self.grid[0].len(), self.grid.len())
+        }
+    }
+
+
+    impl<T: Eq> Grid<T> {
+        pub fn get_all_positions_of(&self, pattern: &T) -> Vec<Point<usize>> {
+            let mut res = vec![];
+            for (row_index, row) in self.grid.iter().enumerate() {
+                for (col_index, elem) in row.iter().enumerate() {
+                    if elem == pattern {
+                        res.push((row_index, col_index));
+                    }
+                }
+            }
+            res
+        }
+    }
+
+    impl Grid<u8> {
+        pub fn parse_digits(input: &[String]) -> AoCResult<Grid<u8>> {
+            if input.is_empty() {
+                return Err(AoCError::UnexpectedInputLength("Input cannot be empty".to_string()))
+            }
+            let mut grid = Vec::with_capacity(input.len());
+            let width = input[0].len();
+            for line in input {
+                if width != line.len() {
+                    return Err(AoCError::BadInputFormat(
+                        "Lines need to have same number of digits.".to_string()))
+                }
+                let row = line.chars()
+                    .filter(|c| c.is_ascii_digit())
+                    .map(|c| (c as u8) - b'0')
+                    .collect::<Vec<_>>();
+                if width != row.len() {
+                    return Err(AoCError::BadInputFormat(
+                        "Input can only contain digits '0' to '9'".to_string()))
+                }
+                grid.push(row);
+            }
+            Ok(Self { grid })
+        }
+    }
+
+    impl<T: Parsable> Grid<T> {
+        pub fn parse(input: &[String]) -> AoCResult<Grid<T>> {
+            if input.is_empty() {
+                return Err(AoCError::UnexpectedInputLength("Input cannot be empty".to_string()))
+            }
+            let mut grid = Vec::with_capacity(input.len());
+            let width = input[0].len();
+            for line in input {
+                if width != line.len() {
+                    return Err(AoCError::BadInputFormat(
+                        "Lines need to have same lengths".to_string()))
+                }
+                let row = line.chars()
+                    .map(|c| T::parse(c))
+                    .collect::<AoCResult<Vec<_>>>()?;
+                assert_eq!(row.len(), width);
+                grid.push(row);
+            }
+            Ok(Self { grid })
+        }
+    }
+
+    impl<T: Display> Display for Grid<T> {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            for line in self.grid.iter() {
+                for elem in line.iter() {
+                    write!(f, "{}", elem)?;
+                }
+                writeln!(f)?;
+            }
+            Ok(())
+        }
+    }
+
+    pub struct GridIter<'a, T> {
+        iter: Iter<'a, Vec<T>>,
+    }
+
+    impl<'a, T> Iterator for GridIter<'a, T> {
+        type Item = &'a Vec<T>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            self.iter.next()
+        }
+    }
+
+    pub trait Parsable {
+        fn parse(c: char) -> AoCResult<Self> where Self: Sized;
+    }
 }

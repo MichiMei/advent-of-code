@@ -1,6 +1,7 @@
 use std::cmp::max;
 use std::collections::HashSet;
-use crate::errors::AoCError;
+use crate::errors::{AoCError, AoCResult};
+use crate::geometrics::{Direction, Grid, Parsable};
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let grid = Grid::parse(input)?;
@@ -12,34 +13,15 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     Ok(grid.follow_optimum_path().to_string())
 }
 
-struct Grid {
-    grid: Vec<Vec<Tile>>,
-}
+type Point = crate::geometrics::Point<usize>;
 
-impl Grid {
-    fn parse(input: &[String]) -> Result<Self, AoCError<String>> {
-        let grid = input.iter()
-            .map(|line| line.chars()
-                .map(Tile::parse)
-                .collect())
-            .collect::<Result<_, _>>()?;
-        Ok(Self { grid })
-    }
-
-    fn get_tile(&self, point: Point) -> Option<Tile> {
-        if point.1 < self.grid.len() && point.0 < self.grid[point.1].len() {
-            Some(self.grid[point.1][point.0])
-        } else {
-            None
-        }
-    }
-
+impl Grid<Tile> {
     fn follow_all_paths(&self, start_pos: Point, start_dir: Direction) -> usize {
         let mut visited = HashSet::new();
         let mut unfinished = vec![(start_pos, start_dir)];
 
         while let Some((pos, dir)) = unfinished.pop() {
-            if let Some(tile) = self.get_tile(pos) {
+            if let Some(tile) = self.get_tile(&pos) {
                 if !visited.insert((pos, dir)) {
                     continue
                 }
@@ -56,19 +38,20 @@ impl Grid {
 
     fn follow_optimum_path(&self) -> usize {
         let mut maximum = 0;
-        for row in 0..self.grid.len() {
+        let size = self.get_dimension();
+        for row in 0..size.1 {
             let start = (0, row);
             maximum = max(maximum,
                           self.follow_all_paths(start, Direction::East));
-            let start =(self.grid.len()-1, row);
+            let start =(size.1-1, row);
             maximum = max(maximum,
                           self.follow_all_paths(start, Direction::West));
         }
-        for col in 0..self.grid[0].len() {
+        for col in 0..size.0 {
             let start = (col, 0);
             maximum = max(maximum,
                           self.follow_all_paths(start, Direction::South));
-            let start =(col, self.grid[col].len()-1);
+            let start =(col, size.0-1);
             maximum = max(maximum,
                           self.follow_all_paths(start, Direction::North));
         }
@@ -86,18 +69,6 @@ enum Tile {
 }
 
 impl Tile {
-    fn parse(c: char) -> Result<Self, AoCError<String>> {
-        match c {
-            '.' => Ok(Self::Empty),
-            '-' => Ok(Self::SplitterHorizontal),
-            '|' => Ok(Self::SplitterVertical),
-            '/' => Ok(Self::MirrorTopRight),
-            '\\' => Ok(Self::MirrorTopLeft),
-            c => Err(AoCError::BadInputFormat(
-                format!("Only '.', '-', '|', '/' and '\\' supported. Found '{}'", c))),
-        }
-    }
-
     fn move_step(&self, point: &Point, direction: &Direction) -> Vec<(Point, Direction)> {
         let mut res = vec![];
         match self {
@@ -151,69 +122,21 @@ impl Tile {
     }
 }
 
-type Point = (usize, usize);
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
+impl Parsable for Tile {
+    fn parse(c: char) -> AoCResult<Self> {
+        match c {
+            '.' => Ok(Self::Empty),
+            '-' => Ok(Self::SplitterHorizontal),
+            '|' => Ok(Self::SplitterVertical),
+            '/' => Ok(Self::MirrorTopRight),
+            '\\' => Ok(Self::MirrorTopLeft),
+            c => Err(AoCError::BadInputFormat(
+                format!("Only '.', '-', '|', '/' and '\\' supported. Found '{}'", c))),
+        }
+    }
 }
 
 impl Direction {
-    fn move_point(&self, point: &Point) -> Option<Point> {
-        match self {
-            Direction::North => {
-                if point.1 == 0 {
-                    None
-                } else {
-                    Some((point.0, point.1-1))
-                }
-            }
-            Direction::East => {
-                Some((point.0+1, point.1))
-            }
-            Direction::South => {
-                Some((point.0, point.1+1))
-            }
-            Direction::West => {
-                if point.0 == 0 {
-                    None
-                } else {
-                    Some((point.0-1, point.1))
-                }
-            }
-        }
-    }
-
-    fn is_horizontal(&self) -> bool {
-        match self {
-            Direction::North => false,
-            Direction::East => true,
-            Direction::South => false,
-            Direction::West => true,
-        }
-    }
-
-    fn is_vertical(&self) -> bool {
-        !self.is_horizontal()
-    }
-
-    fn get_horizontal() -> Vec<Self> {
-        vec![
-            Self::East,
-            Self::West,
-        ]
-    }
-
-    fn get_vertical() -> Vec<Self> {
-        vec![
-            Self::North,
-            Self::South,
-        ]
-    }
-
     fn mirror_top_left(&self) -> Self {
         match self {
             Direction::North => Self::West,
