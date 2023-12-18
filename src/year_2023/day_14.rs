@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use crate::errors::AoCError;
-use crate::geometrics::{Direction, Grid, Parsable, Point};
+use crate::geometrics::{Direction, Grid, Parsable};
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let mut grid = Grid::parse(input)?;
@@ -14,6 +14,8 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     grid.multi_circle(1000000000);
     Ok(grid.sum_rows().to_string())
 }
+
+type Point = crate::geometrics::Point<usize>;
 
 impl Grid<Tile> {
     fn get_rounded(&self) -> Vec<(usize, usize)> {

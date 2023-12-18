@@ -1,7 +1,7 @@
 use std::cmp::{Ordering, Reverse};
 use std::collections::{BinaryHeap, HashMap};
 use crate::errors::AoCError;
-use crate::geometrics::{Direction, Grid, Point};
+use crate::geometrics::{Direction, Grid};
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let grid = Grid::parse_digits(input)?;
@@ -22,6 +22,8 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     grid.get_shortest_path(start, end, 4, 10)
         .map(|v| v.to_string())
 }
+
+type Point = crate::geometrics::Point<usize>;
 
 impl Grid<u8> {
     fn get_shortest_path(&self, start: Point, end: Point, min_to_turn: usize, max_to_turn: usize)

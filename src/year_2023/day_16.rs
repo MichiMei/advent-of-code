@@ -1,7 +1,7 @@
 use std::cmp::max;
 use std::collections::HashSet;
 use crate::errors::{AoCError, AoCResult};
-use crate::geometrics::{Direction, Grid, Parsable, Point};
+use crate::geometrics::{Direction, Grid, Parsable};
 
 pub fn part_1(input: &[String]) -> Result<String, AoCError<String>> {
     let grid = Grid::parse(input)?;
@@ -12,6 +12,8 @@ pub fn part_2(input: &[String]) -> Result<String, AoCError<String>> {
     let grid = Grid::parse(input)?;
     Ok(grid.follow_optimum_path().to_string())
 }
+
+type Point = crate::geometrics::Point<usize>;
 
 impl Grid<Tile> {
     fn follow_all_paths(&self, start_pos: Point, start_dir: Direction) -> usize {

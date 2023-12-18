@@ -434,9 +434,11 @@ pub mod input {
 pub mod geometrics {
     use std::fmt::{Display, Formatter};
     use std::slice::Iter;
+    use num::{CheckedAdd, CheckedSub, One};
     use crate::errors::{AoCError, AoCResult};
 
-    pub type Point = (usize, usize);
+    //pub type Point = (usize, usize);
+    pub type Point<I> = (I, I);
 
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub enum Direction {
@@ -459,12 +461,14 @@ pub mod geometrics {
             }
         }
 
-        pub fn move_point(&self, point: &Point) -> Option<Point> {
+        pub fn move_point<I: Copy + CheckedSub + CheckedAdd + One>(&self, point: &Point<I>)
+            -> Option<Point<I>>
+        {
             match self {
-                Direction::North => point.1.checked_sub(1).map(|y| (point.0, y)),
-                Direction::East => point.0.checked_add(1).map(|x| (x, point.1)),
-                Direction::South => point.1.checked_add(1).map(|y| (point.0, y)),
-                Direction::West => point.0.checked_sub(1).map(|x| (x, point.1)),
+                Direction::North => point.1.checked_sub(&I::one()).map(|y| (point.0, y)),
+                Direction::East => point.0.checked_add(&I::one()).map(|x| (x, point.1)),
+                Direction::South => point.1.checked_add(&I::one()).map(|y| (point.0, y)),
+                Direction::West => point.0.checked_sub(&I::one()).map(|x| (x, point.1)),
             }
         }
 
@@ -534,7 +538,7 @@ pub mod geometrics {
             }
         }
 
-        pub fn get_tile(&self, pos: &Point) -> Option<&T> {
+        pub fn get_tile(&self, pos: &Point<usize>) -> Option<&T> {
             if let Some(row) = self.grid.get(pos.1) {
                 row.get(pos.0)
             } else {
@@ -542,7 +546,7 @@ pub mod geometrics {
             }
         }
 
-        pub fn get_tile_mut(&mut self, pos: &Point) -> Option<&mut T> {
+        pub fn get_tile_mut(&mut self, pos: &Point<usize>) -> Option<&mut T> {
             if let Some(row) = self.grid.get_mut(pos.1) {
                 row.get_mut(pos.0)
             } else {
@@ -550,7 +554,7 @@ pub mod geometrics {
             }
         }
 
-        pub fn set_tile(&mut self, pos: &Point, tile: T) -> bool {
+        pub fn set_tile(&mut self, pos: &Point<usize>, tile: T) -> bool {
             if let Some(prev) = self.get_tile_mut(pos) {
                 *prev = tile;
                 true
@@ -559,7 +563,7 @@ pub mod geometrics {
             }
         }
 
-        pub fn get_dimension(&self) -> Point {
+        pub fn get_dimension(&self) -> Point<usize> {
             if self.grid.is_empty() {
                 return (0, 0)
             }
@@ -567,8 +571,9 @@ pub mod geometrics {
         }
     }
 
+
     impl<T: Eq> Grid<T> {
-        pub fn get_all_positions_of(&self, pattern: &T) -> Vec<Point> {
+        pub fn get_all_positions_of(&self, pattern: &T) -> Vec<Point<usize>> {
             let mut res = vec![];
             for (row_index, row) in self.grid.iter().enumerate() {
                 for (col_index, elem) in row.iter().enumerate() {
