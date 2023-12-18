@@ -472,6 +472,18 @@ pub mod geometrics {
             }
         }
 
+        pub fn move_point_steps<I: Copy + CheckedSub + CheckedAdd>
+        (&self, point: &Point<I>, steps: I)
+            -> Option<Point<I>>
+        {
+            match self {
+                Direction::North => point.1.checked_sub(&steps).map(|y| (point.0, y)),
+                Direction::East => point.0.checked_add(&steps).map(|x| (x, point.1)),
+                Direction::South => point.1.checked_add(&steps).map(|y| (point.0, y)),
+                Direction::West => point.0.checked_sub(&steps).map(|x| (x, point.1)),
+            }
+        }
+
         pub fn get_right(&self) -> Self {
             match self {
                 Direction::North => Self::East,
@@ -525,6 +537,35 @@ pub mod geometrics {
                 Self::South,
             ]
         }
+
+        pub fn get_all_directions() -> Vec<Self> {
+            vec![
+                Self::North,
+                Self::East,
+                Self::South,
+                Self::West,
+            ]
+        }
+
+        pub fn get_all_neighbors<I: Copy + CheckedAdd + CheckedSub + One>(point: &Point<I>)
+            -> Vec<Point<I>>
+        {
+            let dirs = Self::get_all_directions();
+            dirs.into_iter()
+                .filter_map(|dir| dir.move_point(point))
+                .collect()
+        }
+    }
+
+    impl Display for Direction {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Direction::North => write!(f, "North"),
+                Direction::East => write!(f, "East"),
+                Direction::South => write!(f, "South"),
+                Direction::West => write!(f, "West"),
+            }
+        }
     }
 
     pub struct Grid<T> {
@@ -568,6 +609,77 @@ pub mod geometrics {
                 return (0, 0)
             }
             (self.grid[0].len(), self.grid.len())
+        }
+    }
+
+    impl<T: Clone> Grid<T> {
+        pub fn new(dimension: Point<usize>, default: T) -> Grid<T> {
+            let grid = vec![vec![default; dimension.0]; dimension.1];
+            Self { grid }
+        }
+    }
+
+    impl<T: Eq> Grid<T> {
+        pub fn count(&self, pattern: &T) -> usize {
+            self.grid.iter()
+                .flat_map(|row| row.iter())
+                .filter(|tile| *tile == pattern)
+                .count()
+        }
+    }
+
+    impl<T: Clone + Eq> Grid<T> {
+        /// Finds all tiles equal to 'to_overwrite' reachable from the outside edges and replaces
+        /// them using 'template' tiles
+        pub fn mark_outside(&mut self, to_overwrite: &T, template: T) {
+            if *to_overwrite == template {
+                return
+            }
+            if self.grid.is_empty() {
+                return
+            }
+            // Northern and southern edge
+            for x in 0..self.grid[0].len() {
+                let northern = (x, 0);
+                let southern = (x, self.grid.len()-1);
+                if self.get_tile(&northern) == Some(to_overwrite) {
+                    //self.mark_all_connected(to_overwrite, template.clone(), &northern);
+                    self.mark_all_connected(to_overwrite, template.clone(), &northern);
+                }
+                if self.get_tile(&southern) == Some(to_overwrite) {
+                    //self.mark_all_connected(to_overwrite, template.clone(), &southern);
+                    self.mark_all_connected(to_overwrite, template.clone(), &southern);
+                }
+            }
+            // Eastern and western edge
+            for y in 0..self.grid.len() {
+                let eastern = (self.grid[y].len()-1, y);
+                let western = (0, y);
+                if self.get_tile(&eastern) == Some(to_overwrite) {
+                    //self.mark_all_connected(to_overwrite, template.clone(), &eastern);
+                    self.mark_all_connected(to_overwrite, template.clone(), &eastern);
+                }
+                if self.get_tile(&western) == Some(to_overwrite) {
+                    //self.mark_all_connected(to_overwrite, template.clone(), &western);
+                    self.mark_all_connected(to_overwrite, template.clone(), &western);
+                }
+            }
+        }
+
+        /// Finds all tiles equal to 'to_overwrite' reachable from the given Point 'pos' and
+        /// replaces them using 'template' tiles
+        fn mark_all_connected(&mut self, to_overwrite: &T, template: T, pos: &Point<usize>) {
+            let mut list = vec![*pos];
+            while let Some(next) = list.pop() {
+                if let Some(tile) = self.get_tile_mut(&next) {
+                    if tile != to_overwrite {
+                        continue;
+                    }
+                    *tile = template.clone();
+                    let mut neighbors = Direction::get_all_neighbors(&next);
+                    list.append(&mut neighbors);
+                }
+            }
         }
     }
 

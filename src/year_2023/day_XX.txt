@@ -1,10 +1,10 @@
-use crate::errors::AoCError;
+use crate::errors::AoCResult;
 
-pub fn part_1(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_1(input: &Vec<String>) -> AoCResult<String> {
     todo!()
 }
 
-pub fn part_2(input: &Vec<String>) -> Result<String, AoCError<String>> {
+pub fn part_2(input: &Vec<String>) -> AoCResult<String> {
     todo!()
 }
 
@@ -19,7 +19,7 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_1() -> Result<(), AoCError<String>> {
+    fn check_input_part_1() -> AoCResult<()> {
         let input = get_input(2023, XX)?;   // TODO
         assert_eq!(part_1(&input), Ok("expected".to_string())); // TODO
         Ok(())
@@ -31,7 +31,7 @@ mod test {
     }
 
     #[test]
-    fn check_input_part_2() -> Result<(), AoCError<String>> {
+    fn check_input_part_2() -> AoCResult<()> {
         let input = get_input(2023, XX)?;   // TODO
         assert_eq!(part_2(&input), Ok("expected".to_string())); // TODO
         Ok(())
