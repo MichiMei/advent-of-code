@@ -6,6 +6,7 @@ pub mod year_2015;
 pub mod year_2016;
 pub mod year_2017;
 pub mod year_2023;
+pub mod year_2024;
 
 pub fn read_lines_trimmed_from_file(file_name: &str) -> io::Result<Vec<String>> {
     let file = File::open(file_name)?;
@@ -269,7 +270,7 @@ pub mod string_manipulation {
         format!("{}{}", &str[steps..], &str[0..steps])
     }
 
-    /// Searches for the index of the first occurrence of the char, rotates the string right by 
+    /// Searches for the index of the first occurrence of the char, rotates the string right by
     /// index+1 steps (or index+2 iff index >= 4).
     pub fn rotate_char_based(str: &str, char: char) -> Result<String, AoCError<String>> {
         let index = str.find(char)
@@ -433,12 +434,72 @@ pub mod input {
 
 pub mod geometrics {
     use std::fmt::{Display, Formatter};
+    use std::ops::{Add, AddAssign, Sub, SubAssign};
     use std::slice::Iter;
-    use num::{CheckedAdd, CheckedSub, One};
+    use num::{CheckedAdd, CheckedSub, One, Zero};
     use crate::errors::{AoCError, AoCResult};
 
-    //pub type Point = (usize, usize);
     pub type Point<I> = (I, I);
+
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+    pub struct Point3D<I> {
+        pub x: I,
+        pub y: I,
+        pub z: I,
+    }
+
+    impl<I: Add<Output = I>> Add for Point3D<I> {
+        type Output = Point3D<I>;
+        fn add(self, rhs: Point3D<I>) -> Self::Output {
+            Self::Output {
+                x: self.x + rhs.x,
+                y: self.y + rhs.y,
+                z: self.z + rhs.z,
+            }
+        }
+    }
+    impl<I: AddAssign> AddAssign for Point3D<I> {
+        fn add_assign(&mut self, rhs: Self) {
+            self.x += rhs.x;
+            self.z += rhs.y;
+            self.y += rhs.z;
+        }
+    }
+    impl<I: CheckedAdd> CheckedAdd for Point3D<I> {
+        fn checked_add(&self, v: &Self) -> Option<Self> {
+            Some(Self {
+                x: self.x.checked_add(&v.x)?,
+                y: self.y.checked_add(&v.y)?,
+                z: self.z.checked_add(&v.z)?,
+            })
+        }
+    }
+    impl<I: Sub<Output = I>> Sub for Point3D<I> {
+        type Output = Point3D<I>;
+        fn sub(self, rhs: Self) -> Self::Output {
+            Self{
+                x: self.x - rhs.x,
+                y: self.y - rhs.y,
+                z: self.z - rhs.z,
+            }
+        }
+    }
+    impl<I: SubAssign> SubAssign for Point3D<I> {
+        fn sub_assign(&mut self, rhs: Self) {
+            self.x -= rhs.x;
+            self.y -= rhs.y;
+            self.z -= rhs.z;
+        }
+    }
+    impl<I: CheckedSub> CheckedSub for Point3D<I> {
+        fn checked_sub(&self, v: &Self) -> Option<Self> {
+            Some(Self {
+                x: self.x.checked_sub(&v.x)?,
+                y: self.y.checked_sub(&v.y)?,
+                z: self.z.checked_sub(&v.z)?,
+            })
+        }
+    }
 
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
     pub enum Direction {
@@ -451,10 +512,10 @@ pub mod geometrics {
     impl Direction {
         pub fn parse_from_char(c: char) -> AoCResult<Self> {
             match c {
-                'N'|'n' => Ok(Self::North),
-                'E'|'e' => Ok(Self::East),
-                'S'|'s' => Ok(Self::South),
-                'W'|'w' => Ok(Self::West),
+                'N' | 'n' => Ok(Self::North),
+                'E' | 'e' => Ok(Self::East),
+                'S' | 's' => Ok(Self::South),
+                'W' | 'w' => Ok(Self::West),
                 c => Err(AoCError::BadInputFormat(
                     format!("Parsing Direction failed. Only initial letters (upper- and lowercase) \
                         supported. Found '{}'", c)))
@@ -555,6 +616,31 @@ pub mod geometrics {
                 .filter_map(|dir| dir.move_point(point))
                 .collect()
         }
+        
+        pub fn get_other(&self) -> Vec<Self> {
+            match self {
+                Direction::North => vec![
+                    Self::East,
+                    Self::South,
+                    Self::West,
+                ],
+                Direction::East => vec![
+                    Self::North,
+                    Self::South,
+                    Self::West,
+                ],
+                Direction::South => vec![
+                    Self::North,
+                    Self::East,
+                    Self::West,
+                ],
+                Direction::West => vec![
+                    Self::North,
+                    Self::East,
+                    Self::South,
+                ],
+            }
+        }
     }
 
     impl Display for Direction {
@@ -568,6 +654,78 @@ pub mod geometrics {
         }
     }
 
+    pub enum Direction3D {
+        XUp,
+        XDown,
+        YUp,
+        YDown,
+        ZUp,
+        ZDown,
+    }
+
+    impl Direction3D {
+        pub fn move_point<I: Copy + CheckedSub + CheckedAdd + One + Zero>(&self, point: &Point3D<I>)
+            -> Option<Point3D<I>>
+        {
+            match self {
+                Direction3D::XUp =>
+                    point.checked_add(&Point3D {x: I::one(), y: I::zero(), z: I::zero()}),
+                Direction3D::XDown =>
+                    point.checked_sub(&Point3D {x: I::one(), y: I::zero(), z: I::zero()}),
+                Direction3D::YUp =>
+                    point.checked_add(&Point3D {x: I::zero(), y: I::one(), z: I::zero()}),
+                Direction3D::YDown =>
+                    point.checked_sub(&Point3D {x: I::zero(), y: I::one(), z: I::zero()}),
+                Direction3D::ZUp =>
+                    point.checked_add(&Point3D {x: I::zero(), y: I::zero(), z: I::one()}),
+                Direction3D::ZDown =>
+                    point.checked_sub(&Point3D {x: I::zero(), y: I::zero(), z: I::one()}),
+            }
+        }
+
+        pub fn move_point_steps<I: Copy + CheckedSub + CheckedAdd + Zero>
+        (&self, point: &Point3D<I>, steps: I)
+            -> Option<Point3D<I>>
+        {
+            match self {
+                Direction3D::XUp =>
+                    point.checked_add(&Point3D{x: steps, y: I::zero(), z: I::zero()}),
+                Direction3D::XDown =>
+                    point.checked_sub(&Point3D{x: steps, y: I::zero(), z: I::zero()}),
+                Direction3D::YUp =>
+                    point.checked_add(&Point3D{x: I::zero(), y: steps, z: I::zero()}),
+                Direction3D::YDown =>
+                    point.checked_sub(&Point3D{x: I::zero(), y: steps, z: I::zero()}),
+                Direction3D::ZUp =>
+                    point.checked_add(&Point3D{x: I::zero(), y: I::zero(), z: steps}),
+                Direction3D::ZDown =>
+                    point.checked_sub(&Point3D{x: I::zero(), y: I::zero(), z: steps}),
+            }
+        }
+
+        pub fn get_opposing(&self) -> Self {
+            match self {
+                Direction3D::XUp => Direction3D::XDown,
+                Direction3D::XDown => Direction3D::XUp,
+                Direction3D::YUp => Direction3D::YDown,
+                Direction3D::YDown => Direction3D::YUp,
+                Direction3D::ZUp => Direction3D::ZDown,
+                Direction3D::ZDown => Direction3D::ZUp,
+            }
+        }
+
+        pub fn get_all_directions() -> Vec<Self> {
+            vec![
+                Self::XUp,
+                Self::XDown,
+                Self::YUp,
+                Self::YDown,
+                Self::ZUp,
+                Self::ZDown,
+            ]
+        }
+    }
+
     pub struct Grid<T> {
         grid: Vec<Vec<T>>,
     }
@@ -577,6 +735,11 @@ pub mod geometrics {
             GridIter {
                 iter: self.grid.iter(),
             }
+        }
+
+        pub fn row_iter(&self, row: usize) -> Option<GridRowIter<'_, T>> {
+            self.grid.get(row)
+                .map(|row| GridRowIter { iter: row.iter() })
         }
 
         pub fn get_tile(&self, pos: &Point<usize>) -> Option<&T> {
@@ -683,7 +846,6 @@ pub mod geometrics {
         }
     }
 
-
     impl<T: Eq> Grid<T> {
         pub fn get_all_positions_of(&self, pattern: &T) -> Vec<Point<usize>> {
             let mut res = vec![];
@@ -770,7 +932,21 @@ pub mod geometrics {
         }
     }
 
+    pub struct GridRowIter<'a, T> {
+        iter: Iter<'a, T>,
+    }
+
+    impl<'a, T> Iterator for GridRowIter<'a, T> {
+        type Item = &'a T;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            self.iter.next()
+        }
+    }
+
     pub trait Parsable {
         fn parse(c: char) -> AoCResult<Self> where Self: Sized;
     }
 }
+
+pub mod graph;

@@ -29,6 +29,10 @@ harness = false
 name = "aoc-2023"
 harness = false
 
+[[bench]]
+name = "aoc-2024"
+harness = false
+
 [[bin]]
 name = "advent-of-code"
 path = "src/bin/main.rs"
